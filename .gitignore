@@ -1,0 +1,6 @@
+# 生成的测试文件
+tests/test_vs.js
+tests/test_ai.js
+tests/test_result_*.txt
+node_modules/
+*.log

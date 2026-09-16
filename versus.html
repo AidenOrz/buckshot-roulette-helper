@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0a0c0f">
+<title>恶魔轮盘 · 对战版（随机发弹 · 道具）</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0a0c0f;--panel:#14181e;--panel2:#1b212a;--line:#28303c;--line2:#333b47;
+  --text:#ecebe8;--dim:#9aa4b1;--faint:#69737f;
+  --live:#e5484d;--live-soft:rgba(229,72,77,.14);
+  --blank:#93a1b3;--blank-soft:rgba(147,161,179,.13);
+  --gold:#e9b455;--gold-soft:rgba(233,180,85,.1);
+}
+html{-webkit-text-size-adjust:100%}
+body{
+  min-height:100vh;color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+  background:
+    radial-gradient(1100px 520px at 50% -8%,#181f29 0%,rgba(24,31,41,0) 60%),
+    radial-gradient(700px 380px at 50% 108%,rgba(229,72,77,.07),rgba(0,0,0,0) 70%),
+    var(--bg);
+  padding:calc(env(safe-area-inset-top) + 14px) 14px calc(env(safe-area-inset-bottom) + 28px);
+}
+#fx{position:fixed;inset:0;pointer-events:none;z-index:200;opacity:0;background:radial-gradient(circle at 50% 45%,rgba(229,72,77,0) 30%,rgba(229,72,77,.32) 100%)}
+body.flash #fx{animation:flash .55s ease-out}
+@keyframes flash{0%{opacity:0}18%{opacity:1}100%{opacity:0}}
+body.shake #wrap{animation:shake .5s ease-in-out}
+@keyframes shake{0%,100%{transform:none}20%{transform:translate(-7px,3px)}40%{transform:translate(6px,-3px)}60%{transform:translate(-4px,2px)}80%{transform:translate(3px,-1px)}}
+#wrap{max-width:560px;margin:0 auto}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.hidden{display:none!important}
+.icn{width:1em;height:1em;fill:currentColor;vertical-align:-0.12em}
+
+header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.logo{font-size:30px;filter:drop-shadow(0 2px 8px rgba(229,72,77,.35))}
+h1{font-size:17px;letter-spacing:2px}
+.titles p{font-size:9.5px;letter-spacing:3px;color:var(--faint);margin-top:3px}
+.hdrbtns{margin-left:auto;display:flex;gap:8px}
+.hdrbtn{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--panel);display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:16px}
+.hdrbtn .icn{width:19px;height:19px}
+.hdrbtn:active{background:#232b35}
+
+#roundBar{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 10px;scrollbar-width:none}
+#roundBar::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;display:flex;align-items:center;gap:7px;padding:8px 13px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--dim);font-size:12.5px;font-weight:600}
+.chip.active{border-color:var(--gold);color:var(--text);background:var(--gold-soft)}
+.chip .dot{width:7px;height:7px;border-radius:50%;background:var(--faint);flex:0 0 auto}
+.chip .dot.live-dot{background:var(--live);box-shadow:0 0 8px rgba(229,72,77,.8);animation:blink 1.4s infinite}
+@keyframes blink{50%{opacity:.35}}
+.chip .done{color:var(--gold)}
+.chip.win-p .done{color:#7ee2a0}
+.chip.win-o .done{color:#ff8589}
+
+.viewnote{font-size:12px;color:var(--gold);background:var(--gold-soft);border:1px solid rgba(233,180,85,.3);border-radius:10px;padding:9px 12px;margin-bottom:10px;line-height:1.5}
+
+.card{background:linear-gradient(180deg,#161b22,#12161c);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.card-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px}
+.card-head h2{font-size:12px;letter-spacing:3px;color:var(--dim);font-weight:700}
+.sub{font-size:12px;color:var(--faint)}
+em{font-style:normal}
+
+.row1{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.badge{font-size:12px;font-weight:800;letter-spacing:1px;color:var(--gold);border:1px solid rgba(233,180,85,.4);background:var(--gold-soft);padding:4px 10px;border-radius:999px}
+.pill-remain{margin-left:auto;font-size:13px;font-weight:700;color:var(--gold);font-variant-numeric:tabular-nums}
+.pill-remain.grey{color:var(--faint)}
+
+.hpbox{display:flex;flex-direction:column;gap:8px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);margin-bottom:12px}
+.hprow{display:flex;align-items:center;gap:10px;font-size:13px}
+.hplabel{color:var(--dim);min-width:34px;font-weight:600}
+.hearts{font-size:19px;letter-spacing:3px;line-height:1}
+.hearts .hf{color:#ff5c60;text-shadow:0 0 8px rgba(229,72,77,.55)}
+.hearts .he{color:#39424d}
+.hprow.dead .hplabel{color:#c96a6d}
+.cufftag{font-size:10.5px;color:#ffd27a;background:rgba(233,180,85,.12);border:1px solid rgba(233,180,85,.35);border-radius:6px;padding:2px 6px;font-weight:700}
+.newsbox{margin-top:10px;border:1px solid var(--line);background:var(--panel2);border-radius:10px;padding:8px 10px;text-align:left}
+.news-t{font-size:10px;letter-spacing:2px;color:var(--faint);margin-bottom:4px}
+.news-i{font-size:11.5px;color:var(--dim);line-height:1.8}
+.news-i .m{color:var(--gold);font-size:9px;border:1px solid var(--line);border-radius:4px;padding:0 3px;margin-right:5px}
+.pick-list{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0 4px}
+.pick-item{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 6px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font-size:12.5px;font-weight:700}
+.pick-item .icn{width:26px;height:26px;color:var(--gold)}
+.pick-item:active{background:#2a313b;border-color:var(--line2)}
+.itembar-title{font-size:10.5px;letter-spacing:2px;color:var(--faint);margin:2px 0 4px}
+.itembar{display:flex;gap:7px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.itembar::-webkit-scrollbar{display:none}
+.item-slot{position:relative;width:44px;height:44px;flex:0 0 auto;border-radius:11px;border:1px solid var(--line);background:var(--panel);display:flex;align-items:center;justify-content:center;color:var(--gold)}
+.item-slot .cnt{position:absolute;right:2px;bottom:2px;font-size:9.5px;font-weight:800;line-height:1;color:#201607;background:var(--gold);border-radius:5px;padding:2px 4px}
+.item-slot .icn{width:24px;height:24px}
+button.item-slot:active{background:#2a313b;border-color:var(--line2)}
+.item-slot.empty{border-style:dashed;opacity:.4;color:var(--faint)}
+
+.prob{text-align:center;padding:4px 0 2px}
+.prob-label{font-size:11px;letter-spacing:3px;color:var(--faint);margin-bottom:2px}
+.prob-num{font-size:clamp(50px,15vw,76px);font-weight:900;line-height:1.05;font-variant-numeric:tabular-nums;color:var(--text)}
+.prob-num.hot{background:linear-gradient(180deg,#ff7a7d,#e5484d);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 16px rgba(229,72,77,.35))}
+.prob-num.cold{color:var(--faint)}
+.prob-num .pct{font-size:.42em;font-weight:700;color:var(--dim);margin-left:2px}
+.prob-empty{font-size:22px;font-weight:800;color:var(--faint);letter-spacing:4px;padding:14px 0 8px}
+.frac{font-size:13px;color:var(--faint);font-variant-numeric:tabular-nums;margin:-2px 0 10px}
+.bar{height:10px;border-radius:999px;background:#232a33;overflow:hidden;border:1px solid #2c3540}
+.bar .fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#ff7a7d,#e5484d);transition:width .4s ease}
+.pills{display:flex;justify-content:center;gap:10px;margin-top:12px}
+.pill{font-size:12.5px;font-weight:700;padding:6px 13px;border-radius:999px;font-variant-numeric:tabular-nums}
+.pill.live{background:var(--live-soft);border:1px solid rgba(229,72,77,.4);color:#ff8589}
+.pill.blank{background:var(--blank-soft);border:1px solid rgba(147,161,179,.35);color:#b7c2d0}
+.chamber{display:flex;justify-content:center;align-items:flex-end;gap:6px;margin-top:14px;min-height:36px}
+.chamber .none{color:var(--faint);font-size:12px;letter-spacing:2px}
+.infobar{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+.info-chip{font-size:11.5px;padding:5px 9px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--dim);font-weight:700}
+.info-chip.live{color:#ff8589;border-color:rgba(229,72,77,.4);background:var(--live-soft)}
+.info-chip.blank{color:#b7c2d0;border-color:rgba(147,161,179,.35);background:var(--blank-soft)}
+.info-chip.gold{color:#ffd27a;border-color:rgba(233,180,85,.35);background:var(--gold-soft)}
+
+.shell{position:relative;display:inline-block;border-radius:6px 6px 4px 4px;background:linear-gradient(180deg,var(--sc1,#3a4450),var(--sc2,#242c36));box-shadow:inset 0 -8px 12px rgba(0,0,0,.28),0 2px 5px rgba(0,0,0,.45)}
+.shell::after{content:"";position:absolute;left:-2px;right:-2px;bottom:-2px;height:11px;border-radius:3px;background:linear-gradient(180deg,#ecc76f,#a87d2e);box-shadow:0 1px 3px rgba(0,0,0,.5)}
+.shell.mini{width:19px;height:32px;color:#9aa4b1;font-size:10.5px;font-weight:800;display:inline-flex;align-items:center;justify-content:center}
+.shell.big{width:34px;height:56px;border-radius:8px 8px 5px 5px}
+.shell.s-live{--sc1:#ff6b6e;--sc2:#c22f35}
+.shell.s-blank{--sc1:#aebbcc;--sc2:#5f6b7a}
+
+.turnline{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:14px;padding:11px;border-radius:12px;border:1px dashed var(--line);background:var(--panel2);font-size:13.5px;color:var(--dim)}
+.turnline b{color:var(--gold);font-size:14.5px}
+.turnline .swap{color:var(--faint);font-size:12px}
+.turnline.thinking{border-color:rgba(233,180,85,.4);color:var(--gold);animation:blink 1.6s infinite}
+
+.fire{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.fire-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:120px;border-radius:20px;border:1px solid;font-size:16.5px;font-weight:800;letter-spacing:1.5px;transition:transform .08s,filter .15s}
+.fire-btn:active{transform:scale(.955)}
+.fire-btn:disabled{opacity:.32;pointer-events:none}
+.fire-btn .fico{font-size:36px;line-height:1.15}
+.fire-btn small{font-size:10.5px;font-weight:500;letter-spacing:0}
+.fire-btn.self{background:linear-gradient(180deg,#1c2836,#141b25);border-color:#31465e}
+.fire-btn.self:active{background:#223146}
+.fire-btn.foe{background:linear-gradient(180deg,#2d1a1e,#1e1316);border-color:#5c2f34}
+.fire-btn.foe:active{background:#3a2024}
+
+.shots{list-style:none;display:flex;flex-direction:column;gap:8px}
+.shot{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:var(--panel2);border:1px solid var(--line);font-size:14px}
+.shot .no{color:var(--faint);font-size:12px;font-variant-numeric:tabular-nums;min-width:30px}
+.shot .who{flex:1}
+.shot .mtag{font-size:10px;color:var(--faint);border:1px solid var(--line);border-radius:5px;padding:1px 4px;margin-right:4px}
+.shot .dmg{font-size:11px;color:#c96a6d}
+.shot .tag{font-weight:700;font-size:12.5px;padding:4px 11px;border-radius:999px;white-space:nowrap}
+.shot.live{border-color:rgba(229,72,77,.42)}
+.shot.live .tag{background:var(--live-soft);color:#ff8589}
+.shot.blank .tag{background:var(--blank-soft);color:#b7c2d0}
+.shot.last{box-shadow:0 0 0 1.5px rgba(233,180,85,.4)}
+.empty{color:var(--faint);font-size:13px;text-align:center;padding:14px 0 4px}
+
+.ghost{display:inline-flex;align-items:center;gap:6px;margin-top:12px;padding:10px 16px;border-radius:11px;border:1px solid var(--line);background:var(--panel2);color:var(--dim);font-size:13px;font-weight:600}
+.ghost:active{background:#232b35}
+.mini{display:block;width:100%;margin-top:10px;padding:10px;border-radius:11px;border:1px dashed rgba(201,106,109,.4);color:#c96a6d;font-size:12.5px;font-weight:600;text-align:center}
+
+.cta{display:block;width:100%;padding:16px;border-radius:14px;background:linear-gradient(180deg,#e9b455,#c98f2c);color:#201607;font-size:16px;font-weight:800;letter-spacing:1.5px;box-shadow:0 8px 24px rgba(201,143,44,.25)}
+.cta:active{filter:brightness(.9)}
+.cta.danger{background:linear-gradient(180deg,#ff6b6e,#d4393e);color:#fff}
+#ctaPulse{animation:pulse 1.7s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(233,180,85,.4)}55%{box-shadow:0 0 0 12px rgba(233,180,85,0)}}
+
+.rules{margin-top:4px;border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:2px 16px}
+.rules summary{cursor:pointer;padding:13px 0;font-size:13px;font-weight:700;color:var(--dim);letter-spacing:1px;list-style:none}
+.rules summary::before{content:"▸ ";color:var(--gold)}
+.rules[open] summary::before{content:"▾ "}
+.rules ul{padding:2px 0 14px 2px;list-style:none}
+.rules li{font-size:13px;color:var(--dim);line-height:1.75;padding-left:14px;position:relative}
+.rules li::before{content:"·";position:absolute;left:2px;color:var(--gold);font-weight:900}
+.rules b{color:var(--text)}
+.footer{text-align:center;margin-top:18px;display:flex;flex-direction:column;gap:4px;align-items:center}
+.link{font-size:12.5px;color:var(--faint);text-decoration:underline dotted;padding:8px}
+.link.danger{color:#c96a6d}
+
+#toast{position:fixed;top:calc(env(safe-area-inset-top) + 12px);left:50%;transform:translateX(-50%) translateY(-8px);z-index:300;background:#1f2630;border:1px solid var(--line2);color:var(--text);font-size:13px;padding:10px 16px;border-radius:12px;opacity:0;pointer-events:none;transition:.25s;max-width:86vw}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+#overlay{position:fixed;inset:0;z-index:100;background:rgba(5,7,10,.84);-webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);display:flex;align-items:center;justify-content:center;padding:24px}
+.ov-box{width:100%;max-width:342px;max-height:86vh;overflow-y:auto;background:linear-gradient(180deg,#171c24,#10141a);border:1px solid var(--line);border-radius:22px;padding:26px 22px;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.65);animation:ovin .32s cubic-bezier(.2,1.4,.4,1)}
+@keyframes ovin{from{transform:scale(.85);opacity:0}}
+.ov-title{font-size:13px;letter-spacing:3px;color:var(--gold);font-weight:800}
+.ov-sub{margin:8px 0 16px;color:var(--dim);font-size:14px}
+.ov-sub b{color:var(--text)}
+.load-shells{display:flex;justify-content:center;align-items:flex-start;gap:7px;flex-wrap:wrap;min-height:62px}
+.shell.pop{animation:pop .45s cubic-bezier(.2,1.6,.4,1) backwards}
+@keyframes pop{from{transform:scale(0) rotate(-14deg);opacity:0}}
+.load-shells.shuffling .shell{animation:wob .42s ease-in-out infinite alternate}
+@keyframes wob{from{transform:translateX(-5px) rotate(-5deg)}to{transform:translateX(5px) rotate(5deg)}}
+.load-legend{display:flex;justify-content:center;gap:10px;margin:14px 0 8px;flex-wrap:wrap}
+.load-msg{color:var(--dim);font-size:13px;min-height:20px;margin-bottom:12px;letter-spacing:1px}
+.load-msg.ok{color:var(--gold)}
+
+.r-shell{width:62px;height:102px;border-radius:12px 12px 8px 8px;margin:4px auto 2px}
+.r-shell::after{height:16px;border-radius:5px}
+.boomfx{font-size:46px;margin-top:-64px;animation:boomfx .6s ease-out;pointer-events:none}
+@keyframes boomfx{0%{transform:scale(.3);opacity:0}45%{transform:scale(1.3);opacity:1}100%{transform:scale(1)}}
+.pufffx{font-size:42px;margin-top:-58px;animation:puff 1.2s ease-out;pointer-events:none}
+@keyframes puff{0%{transform:scale(.6) translateY(8px);opacity:0}30%{opacity:.9}100%{transform:scale(1.55) translateY(-12px);opacity:0}}
+.r-title{font-size:28px;font-weight:900;letter-spacing:5px;margin:10px 0 4px}
+.r-title.live{color:#ff5c60;text-shadow:0 0 26px rgba(229,72,77,.55)}
+.r-title.blank{color:#aeb9c7}
+.r-sub{color:var(--dim);font-size:13px}
+.r-note{margin:12px 0 0;font-size:14px;color:var(--gold);background:rgba(233,180,85,.08);border:1px solid rgba(233,180,85,.28);padding:10px;border-radius:10px}
+.r-note.stay{color:#7ee2a0;background:rgba(90,200,140,.08);border-color:rgba(90,200,140,.32)}
+.r-note.dmg{color:#ff8589;background:var(--live-soft);border-color:rgba(229,72,77,.4)}
+.r-note.dead{color:#ffb0b2;background:rgba(229,72,77,.18);border-color:rgba(229,72,77,.55);font-weight:800}
+.r-note.warn{color:#ff8589;background:var(--live-soft);border-color:rgba(229,72,77,.45);font-weight:700}
+.ov-btns{margin-top:18px;display:flex;flex-direction:column;gap:10px}
+
+.rsv-cols{display:flex;gap:10px;margin:12px 0 4px}
+.rsv-col{flex:1;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 8px}
+.rsv-col h3{font-size:12.5px;color:var(--dim);margin-bottom:8px;font-weight:700}
+.rsv-items{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;min-height:34px}
+.rsv-items .icn{width:24px;height:24px;color:var(--gold)}
+.rsv-note{font-size:11px;color:var(--faint);margin-top:6px}
+
+.m-icon{font-size:40px;margin-bottom:8px;color:var(--gold)}
+.m-icon .icn{width:44px;height:44px}
+.m-body{color:var(--dim);font-size:14px;line-height:1.7;margin:10px 0 18px}
+.m-body b{color:var(--text)}
+.m-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.m-btns .ghost{margin-top:0;justify-content:center}
+
+.setrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 2px;border-bottom:1px solid var(--line);font-size:14px;text-align:left}
+.setrow .lname{display:flex;align-items:center;gap:9px;color:var(--text)}
+.setrow .lname .icn{width:18px;height:18px;color:var(--gold)}
+.setrow .ldesc{font-size:10.5px;color:var(--faint);margin-top:2px}
+.tgl{width:52px;height:30px;border-radius:999px;background:#2a323d;position:relative;transition:.2s;flex:0 0 auto}
+.tgl::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#8fa0b3;transition:.2s}
+.tgl.on{background:rgba(233,180,85,.4)}
+.tgl.on::after{left:25px;background:var(--gold)}
+
+@media (min-width:560px){.fire-btn{min-height:132px}}
+</style>
+</head>
+<body>
+<div id="fx"></div>
+<div id="toast"></div>
+<div id="wrap">
+  <header>
+    <div class="logo">😈</div>
+    <div class="titles">
+      <h1>恶魔轮盘 · 对战版</h1>
+      <p>VERSUS MODE · ITEMS ON</p>
+    </div>
+    <div class="hdrbtns">
+      <button class="hdrbtn" data-action="settings" aria-label="道具设置"></button>
+      <button class="hdrbtn" id="soundBtn" data-action="sound" aria-label="声音开关">🔊</button>
+    </div>
+  </header>
+  <nav id="roundBar" aria-label="回合切换"></nav>
+  <main id="main"></main>
+</div>
+<div id="overlay" class="hidden"></div>
+
+<script>
+'use strict';
+var KEY='buckshot-vs-v3';
+var SETKEY='buckshot-vs-settings-v1';
+function $(s){return document.querySelector(s)}
+function other(p){return p==='player'?'opponent':'player'}
+var NAME={player:'玩家',opponent:'对方'};
+var TARGET={self:'自己',other:'对方'};
+
+var ITEMS={
+  cigarette:{n:'香烟',d:'回复 1♥（不超过本回合初始血量）'},
+  pill:{n:'过期止痛药',d:'50% 回复 2♥（封顶）/ 50% 失去 1♥（可致死）'},
+  cuff:{n:'手铐',d:'对方跳过下一次行动（对方已被铐时不可用）'},
+  phone:{n:'手机',d:'得知仓内随机一发（非下一发）的真实弹种'},
+  mag:{n:'放大镜',d:'得知下一发子弹'},
+  inv:{n:'逆转器',d:'下一发子弹 实弹↔空包 互换'},
+  beer:{n:'啤酒',d:'退出当前下一发并公开结果；退完则补弹重装'},
+  adr:{n:'兴奋剂',d:'偷取对方一个道具（弹窗自选；对方无道具时不可用）'},
+  dtrg:{n:'双发扳机',d:'使用后你的下一次开枪伤害变为 2♥（空包无伤害）'}
+};
+var ICONPATHS={
+cigarette:'<path d="M224 32c9.036 24.71 106.984 58.72 156.096 64-37.096 7.89-53.042 10.52-57.545 32-13.076 62.384 191.477 60.478 115.73 152.223 69.11-15.788 57.922-116.197 15.887-129.84-27.237-8.84-63.75-11.67-47.75-38.383C425.962 88.104 503.57 59.74 448 32zM28.096 292v64h87v-64zm105 0v64h274v-64zm292 0v64h16v-64zm34 0v64h17v-64z"/>',
+pill:'<path d="M383.72 70.188c-1.145-.01-2.293 0-3.44.03-16.662.428-33.436 4.925-48.81 13.907-148.594 86.803-101.707 58.72-253.533 146.375l-4.656 2.688v.312c-45.61 29.694-60.683 90.445-33.155 138.125 28.464 49.3 91.974 66.493 141.188 37.78 151.39-88.32 104.363-60.41 253.5-146.374 49.327-28.43 66.307-91.824 37.843-141.124-18.957-32.834-53.47-51.442-88.937-51.72zm1.342 16.468c25.255.406 49.682 13.512 63.094 36.844 1.82 3.164 2.786 6.918 4.094 10.22-22.875-25.86-61.86-33.04-92.97-15-64.527 37.42-83.64 48.864-105.686 61.874 22.46 19.385 44.32 52.128 54.25 82.03-56.72 32.796-51.65 30.67-148.844 87.032-31.11 18.04-70.094 10.858-92.97-15 1.31 3.3 2.277 7.055 4.095 10.22 20.438 35.552 66.447 47.306 102 26.687 93.043-53.956 91.828-53.805 141.188-82.313.507 9.606-1.02 18.18-5.094 24.938-28.792 16.492-53.304 30.647-136.345 79.093-40.39 23.566-92.154 9.545-115.563-31-23.408-40.542-9.574-92.186 30.97-115.592l4.687-2.72c73.185-42.234 98.623-56.668 125.81-72.25 37.072-21.5 44.154-26.065 128.376-74.905 12.222-7.088 25.678-10.37 38.906-10.157z"/>',
+cuff:'<path d="M147.406 20.03a30.817 30.817 0 0 0-3.156.157c-4.238.433-8.576 1.774-12.656 4.125-.008.005-.023-.004-.03 0l-29.783 17.22c-7.858 4.534-12.662 12.15-13.874 19.78-1.212 7.63.62 15.126 4.22 21.47.11.197.227.397.343.593l-11.72 40.22a36.448 36.448 0 0 0-5 4.124c-5.196 5.117-9.01 11.83-9.844 19.56-.835 7.732 1.923 16.39 8.406 22.876L98.626 194.5c6.633 6.63 15.296 9.602 23.188 9.03 4.63-.333 8.935-1.755 12.78-3.905l7.095 6.688a29.393 29.393 0 0 0-5.157 10.437l-1.624 6.03 18.063 4.845 1.624-6.063c1.06-3.953 2.712-5.37 5.125-6.437 1.205-.533 2.67-.867 4.28-.938 1.61-.07 3.366.126 5.063.594 3.393.938 6.375 2.963 7.968 5.157 1.594 2.195 2.284 4.266 1.282 8l-1.625 6.032 18.063 4.843 1.625-6.032c2.35-8.762.32-17.56-4.22-23.81-4.537-6.253-11.093-10.28-18.124-12.22a35.11 35.11 0 0 0-10.905-1.25c-1.67.075-3.34.28-5 .625l-10.344-9.75c2.06-3.75 3.42-7.944 3.75-12.438.586-7.917-2.42-16.574-9.093-23.25l-24.343-24.312c-4.677-4.68-10.516-7.357-16.313-8.156l6.157-21.095c.177.072.353.15.532.22 7.25 2.806 16.336 2.394 24.28-2.19l29.813-17.186c6.104-3.528 10.526-8.694 12.968-14.345l21.095 5.938c-.88 3.745-1.122 7.688-.5 11.687 1.194 7.683 6.06 15.35 14 19.938l29.813 17.218a31.333 31.333 0 0 0 11.78 3.97L255 140.78c-2.735 1.553-5.224 3.477-7.438 5.657-5.195 5.12-8.977 11.833-9.812 19.563-.835 7.73 1.89 16.39 8.375 22.875l4.22 4.22 13.218-13.22-4.22-4.22c-2.893-2.893-3.314-5.032-3.03-7.655.283-2.623 1.867-5.78 4.375-8.25 2.507-2.47 5.77-4.06 8.468-4.344.337-.035.68-.052 1-.062 2.252-.07 4.17.544 6.563 2.937v.032l4.217 4.188 13.188-13.188-4.188-4.218a28.68 28.68 0 0 0-16.656-8.188l-3.25-18.28c4.92-2.895 8.87-7.066 11.658-11.845 3.74-6.412 5.516-14.137 4.03-21.936-1.484-7.8-6.637-15.374-14.812-20.094l-29.78-17.188c-3.93-2.27-8.145-3.506-12.282-3.812-4.137-.306-8.206.305-11.813 1.688-4.304 1.65-8.01 4.21-11.093 7.343l-29.093-8.186a34.05 34.05 0 0 0-3.47-8.594c-3.684-6.445-9.47-11.856-16.968-14.47-2.81-.98-5.862-1.488-9-1.5zm-.187 18.564c1.063.03 2.05.252 3.03.593 2.614.912 5.225 3.153 6.906 6.094 1.682 2.942 2.312 6.365 1.78 9.126-.528 2.756-1.805 5.11-5.717 7.375-.01.006-.024-.004-.032 0l-29.782 17.19c-3.545 2.044-5.726 1.89-8.187.936a10.648 10.648 0 0 1-1.97-1.03l.094-.345-.906-.25c-1.53-1.183-2.977-2.804-4.063-4.718-1.737-3.06-2.425-6.634-2-9.312.425-2.678 1.4-4.598 4.75-6.53v-.032l29.78-17.188h.032c2.02-1.166 3.688-1.72 5.188-1.875.375-.038.74-.04 1.094-.03zM226.5 62.22c.31-.02.618-.024.938 0 1.276.09 2.637.53 4.312 1.5v.03l29.813 17.188c4.04 2.332 5.294 4.686 5.812 7.406.518 2.72-.138 6.105-1.844 9.03-1.705 2.927-4.343 5.174-7 6.095-2.654.92-5.316 1.02-9.25-1.25L219.47 85c-3.544-2.048-4.47-3.985-4.876-6.594-.406-2.608.28-6.09 2.062-9.125 1.783-3.034 4.532-5.435 7.063-6.405.948-.364 1.85-.598 2.78-.656zM98.344 136.624c2.246-.065 4.14.575 6.53 2.97l24.345 24.31c3.296 3.3 3.89 5.896 3.686 8.657-.204 2.762-1.688 5.865-4.094 8.25-2.405 2.386-5.54 3.892-8.343 4.094-2.805.203-5.415-.415-8.626-3.625L87.53 156.97c-2.89-2.895-3.313-5.065-3.03-7.69.283-2.622 1.867-5.778 4.375-8.25 2.508-2.47 5.773-4.06 8.47-4.343.336-.035.678-.053 1-.062zM320 149.875l-62.094 62.094 48.844 48.843 26.938-26.938.343.344a71.152 71.152 0 0 1 3.033-3.25c27.69-27.693 72.59-27.693 100.28 0 27.205 27.203 27.684 71.022 1.438 98.81-.004.014-.025.02-.03.033-1.03 2.514-1.372 4.965-1.28 7.343.18 4.757 2.415 9.505 5.936 13.063 3.52 3.556 8.17 5.75 12.875 5.936 3.614.144 7.41-.73 11.47-3.625 37.58-42.338 36.114-107.29-4.438-147.842-29.2-29.2-71.177-37.894-108.062-26.563l-5.375 1.656-3.97-3.968L320 149.875zm-11.75 40.688 18.313 18.312-13.22 13.22-18.312-18.314 13.22-13.218zm-186.53 48-17.876 66.78 36.78 9.844-.124.47c1.445.292 2.9.612 4.344 1 37.828 10.135 60.26 49.015 50.125 86.843-9.962 37.175-47.675 59.485-84.876 50.625-2.695.375-4.986 1.326-7 2.594-4.03 2.533-7.024 6.796-8.344 11.624-1.32 4.828-.908 9.988 1.28 14.156 1.686 3.206 4.35 6.085 8.907 8.156 55.445 11.366 110.96-22.407 125.813-77.78.003-.01-.003-.022 0-.032 10.673-39.878-2.783-80.572-31.03-106.844l-4.126-3.844 1.437-5.437 9.5-35.44-84.81-22.717zm159.655 23.28c-6.083 33.48 3.736 69.08 29.72 95.063 36.204 36.205 91.507 41.554 133.06 15.625-5.342-2.01-10.13-5.214-14.06-9.186-5.135-5.186-8.89-11.79-10.47-19.156-26.67 13.713-60.22 9.406-82.563-12.938-14.735-14.735-21.633-34.33-20.687-53.625l-3 3-6.625 6.625-6.594-6.625-18.78-18.78zm-131.656 4.094 18.06 4.844-6.686 25.033-18.063-4.844 6.69-25.033zm-59.47 17.938c-32.02 11.48-57.93 37.8-67.438 73.28-13.252 49.46 9.77 100.012 53 123.033-.936-5.626-.568-11.36.907-16.75 1.923-7.036 5.783-13.63 11.374-18.688C62.872 428.512 49.82 397.34 58 366.812c5.395-20.134 18.935-35.924 36.125-44.75L90 320.97l-9.03-2.44 2.405-9.03 6.875-25.625z"/>',
+phone:'<path d="M160 32c-16 0-32 16-32 32v384c0 16 16 32 32 32h192c16 0 32-16 32-32V64c0-16-16-32-32-32H160zm21.68 23h96v18h-96V55zM304 55h32v18h-32V55zM154 96h204v320H154V96zm70 342h63.984c16 0 16 16 16 16v6H208v-6s0-16 16-16z"/>',
+mag:'<path d="M333.78 20.188c-39.97 0-79.96 15.212-110.405 45.656-58.667 58.667-60.796 152.72-6.406 213.97l-15.782 15.748 13.25 13.25 15.75-15.78c61.248 54.39 155.3 52.26 213.968-6.407 60.887-60.886 60.888-159.894 0-220.78C413.713 35.4 373.753 20.187 333.78 20.187zm0 18.562c35.15 0 70.285 13.44 97.158 40.313 53.745 53.745 53.744 140.6 0 194.343-51.526 51.526-133.46 53.643-187.5 6.375l.218-.217c-2.35-2.05-4.668-4.17-6.906-6.407-2.207-2.206-4.288-4.496-6.313-6.812l-.218.22c-47.27-54.04-45.152-135.976 6.374-187.502C263.467 52.19 298.63 38.75 333.78 38.75zm0 18.813c-30.31 0-60.63 11.6-83.81 34.78-46.362 46.362-46.362 121.234 0 167.594 10.14 10.142 21.632 18.077 33.905 23.782-24.91-19.087-40.97-49.133-40.97-82.94 0-15.323 3.292-29.888 9.22-43-4.165 20.485.44 40.88 14.47 54.907 24.583 24.585 68.744 20.318 98.624-9.562 29.88-29.88 34.146-74.04 9.56-98.625a52.379 52.379 0 0 0-7.655-6.313c45.13 8.648 79.954 46.345 84.25 92.876 4.44-35.07-6.82-71.726-33.813-98.72-23.18-23.18-53.47-34.78-83.78-34.78zM176.907 297.688 42.094 432.5l34.562 34.563L211.47 332.25l-34.564-34.563zM40 456.813 24 472.78 37.22 486l15.968-16L40 456.812z"/>',
+inv:'<path d="M248.91 50a205.9 205.9 0 0 1 35.857 3.13c85.207 15.025 152.077 81.895 167.102 167.102 15.023 85.208-24.944 170.917-99.874 214.178-32.782 18.927-69.254 27.996-105.463 27.553-46.555-.57-92.675-16.865-129.957-48.15l30.855-36.768a157.846 157.846 0 0 0 180.566 15.797 157.846 157.846 0 0 0 76.603-164.274A157.848 157.848 0 0 0 276.429 100.4a157.84 157.84 0 0 0-139.17 43.862L185 192H57V64l46.34 46.342C141.758 71.962 194.17 50.03 248.91 50z"/>',
+beer:'<path d="M252.094 19.438c-18.092-.063-35.548 9.82-43.125 28.437v9.688l-11.376-2.5c-14.316-3.17-25.792-1.15-33.375 3.843-7.585 4.994-12.174 12.898-12.345 25.438-.13 9.54 1.93 15.82 4.813 20 2.882 4.18 6.673 6.672 11.906 8.062 10.465 2.78 26.67-.357 41.094-8.75l5.968-3.47 5.063 4.658c8.405 7.744 14.51 11.07 20.56 12.25 6.052 1.18 13.046.318 23.44-2.875l9.842-3.032 2.063 10.093c2.695 13.158 14.91 23.407 29.125 23.407 13.237 0 23.67-9.028 27.313-21.468l2.218-7.532 7.783.843c8.855.99 19.41-4.045 25-10.343l6-6.75 6.968 5.782c18.61 15.487 35.46 16.96 47.283 11.468 11.82-5.494 20.18-18.602 19.25-38.782-.88-18.827-10.97-30.448-25.5-35.812-14.532-5.364-33.76-3.61-51.282 8.218l-7.436 5.032-5.344-7.25c-7.038-9.585-17.09-15.485-26.72-17-9.628-1.516-18.487.928-25.374 8.406l-7.406 8.03-6.78-8.56c-10.443-13.165-25.214-19.482-39.626-19.532zM65.22 119.968C37.8 203.65 25.784 289.07 28.812 376.19c39.55 17.23 81.422 18.105 123.437 18a956.588 956.588 0 0 0 6.594-34.22c-32.102 1.678-64.094 2.52-94.313-9.124-2.33-66.88 6.917-121.622 28-187.03 27.318 6.5 55.01 8.61 83.25 7.467-.07-11.715-.387-22.556-1.03-32.31-37.168-1.726-73.593-8.642-109.53-19zm148 2.97c-6.57 3.29-13.37 5.82-20.19 7.406 3.092 33.456 1.947 78.392-2.186 127.094-4.777 56.28-13.866 116.5-26.438 166.718H434.25c-9.932-52.565-18.812-111.61-23.594-166.72-3.87-44.618-5.233-86.115-2.03-119.717-10.777-1.282-22.047-5.642-32.938-13.22-7.498 5.988-16.954 10.145-27.25 10.75-7.46 16.247-23.42 28.125-42.688 28.125-19.644 0-36.84-11.86-44.344-28.938-8.26 1.885-15.993 2.507-23.72 1-8.57-1.67-16.468-6.014-24.467-12.5zm-78.376 319.906L116.22 491.25h358.686l-21.72-48.406h-318.34z"/>',
+adr:'<path d="M112.182 18.393c-.37-.007-.77 0-1.205.023-3.172.16-8.473 2.174-14.688 7.078-9.654 32.85-35.603 60.926-71.335 72.012-3.3 6.59-4.446 11.897-4.215 15.156.268 3.77 1.223 5.062 3.895 6.502 5.342 2.88 21.9 2.56 44.19-10.31l4.843-2.795 4.752 2.944c35.087 21.744 53.66 39.973 72.885 69.553l23.517-23.518c-31.97-18.754-48.732-38.902-68.935-73.91l-2.696-4.67 2.7-4.673c15.082-26.124 14.602-44.643 11.354-50.133-1.42-2.4-2.482-3.214-5.062-3.26zM275.8 87.45c-28.745 0-52.638 21.59-56.323 49.36l-84.444 84.448c-27.773 3.684-49.36 27.58-49.36 56.322 0 31.276 25.553 56.832 56.83 56.832 30.934 0 56.253-25 56.808-55.805l96.89 96.89 13.214-13.216L185.88 238.747l25.31-25.312 93.576 93.574 13.214-13.215-93.574-93.574 12.614-12.613 123.535 123.536 13.215-13.215-96.842-96.842c30.76-.608 55.703-25.906 55.703-56.803 0-31.276-25.553-56.832-56.83-56.832zm0 18.69a38.003 38.003 0 0 1 38.143 38.143 38.003 38.003 0 0 1-38.144 38.143 38.001 38.001 0 0 1-38.144-38.143 38.003 38.003 0 0 1 38.143-38.144zM142.503 239.437a38 38 0 0 1 38.142 38.142 38.003 38.003 0 0 1-38.142 38.145 38.006 38.006 0 0 1-38.145-38.145 38.002 38.002 0 0 1 38.144-38.142zm263.168 61.544c-5.287 0-10.573 2.044-14.66 6.13l-29.858 29.86-27.183-27.19-13.214 13.214 27.183 27.19-42.594 42.593h-.002c-8.18 8.186-8.176 21.15 0 29.33 8.172 8.175 21.147 8.175 29.326-.005l85.664-85.668c8.18-8.177 8.18-21.147.002-29.322-4.09-4.09-9.378-6.133-14.664-6.133zm-8.352 84.9L384.105 399.1l97.885 97.884 13.215-13.214-97.885-97.885z"/>',
+dtrg:'<path d="M414.834 18.08c-29.377.15-59.012 16.6-73.164 58.87-18.758 56.028 67.407 137.784 33.57 221.206l48.215 41.87c35.646-92.954-52.048-200.4-34.2-251.44 12.36-35.35 35.672-38.21 56.05-26.44 19.942 11.51 30.406 30.664 17.974 54.99 33.043-12.62 37.255-51.444 9.52-77.197-3.96-3.68-9.02-7.016-14.277-10.05-12.984-7.496-28.3-11.89-43.69-11.81zm-80.77 32.01L65.937 62.16l-12.52 268.254c6.35-3.422 12.764-6.356 19.128-8.965L83.81 80.063l240.33-10.82c2.91-6.817 6.27-13.176 9.924-19.154zM104.686 87.955l324.392 330.04c-4.34 4.466-8.884 8.73-13.62 12.8L91.132 100.825l-.268.267L389.03 450.41c-14.866 9.56-31 17.84-48.122 25.12l116.04 19.41-7.018-44.188 44.187 7.02L474.71 341.73c-5.74 17.768-13.425 33.603-22.753 47.803L104.687 87.955zm-6.608 248.54c-.862-.012-1.718-.007-2.57.015-5.58.14-10.955.986-16.106 2.71-64.408 21.564-68.868 79.083-47.06 116.854 24.26 42.03 72.824 42.517 87.244 4.76-24.33 12.43-43.474 1.958-54.99-17.98-11.763-20.378-8.91-43.69 26.435-56.045 50.177-17.548 154.964 66.773 248.366 34.237l-40.757-47.75c-73.316 27.468-146.275-36.113-200.562-36.803z"/>',
+gear:'<path d="M179.625 22.313 163.22 58.937a87.676 87.676 0 0 0-9.72-.624c-10.577-.066-20.857 1.808-30.47 5.28L99.78 31.032 55.75 63.188l24.063 33.657a87.946 87.946 0 0 0-14.5 35.75l-42.72 4.687 5.345 54.25 45.468-5A89.896 89.896 0 0 0 94 213.502l-19.406 43.375 49.375 22.094 19.5-43.564c11.656 1.242 23.08.128 33.75-3l28.124 38.53 31.72-23.186 11.655 20.156A209.02 209.02 0 0 0 209.624 307l-49.22-28.344-25.718 46.72 48.125 27.937a206.71 206.71 0 0 0-14.343 53.812H112.5v53.72h56.22a204.365 204.365 0 0 0 8.03 35.06h169.312c-23.915-10.758-40.562-34.788-40.562-62.717 0-37.964 30.754-68.75 68.72-68.75 37.963 0 68.75 30.786 68.75 68.75 0 27.93-16.67 51.96-40.595 62.718h91.5V200.375l-11.688-6.406L454.594 242A204.25 204.25 0 0 0 401 227.28v-55.53h-53.72v55.47c-18.303 2.377-35.83 7.183-52.31 14.03l-27.126-47.28-36 20.25-9.25-12.97a88.715 88.715 0 0 0 15.5-31.72l44.437-4.843-5.342-54.25-42.25 4.157A89.013 89.013 0 0 0 212.376 81.5L229 44.406l-49.375-22.093zm-27.344 84.25c23.3-.24 42.94 17.827 44.376 41.343 1.48 24.275-17.004 45.144-41.28 46.625-24.278 1.483-45.145-16.974-46.626-41.25-1.48-24.274 16.973-45.142 41.25-46.624.76-.046 1.53-.086 2.28-.094z"/>'
+};
+
+function ic(k){
+  var p=ICONPATHS[k]||'';
+  return '<svg class="icn" viewBox="0 0 512 512" aria-hidden="true">'+p+'</svg>';
+}
+
+var state=null,settings=null,ovTimers=[],pendingOk=null,toastTimer=null,AC=null;
+
+/* ---------------- 随机数（crypto 均匀分布） ---------------- */
+function randInt(n){
+  var u=new Uint32Array(1),lim=Math.floor(4294967296/n)*n,v;
+  do{crypto.getRandomValues(u);v=u[0]}while(v>=lim);
+  return v%n;
+}
+function shuffled(arr){
+  var a=arr.slice(),i,j,t;
+  for(i=a.length-1;i>0;i--){j=randInt(i+1);t=a[i];a[i]=a[j];a[j]=t}
+  return a;
+}
+
+/* ---------------- 设置 ---------------- */
+function defaultSettings(){return {items:{cigarette:true,pill:true,cuff:true,phone:true,mag:true,inv:true,beer:true,adr:true,dtrg:true}}}
+function loadSettings(){
+  try{var s=JSON.parse(localStorage.getItem(SETKEY));if(s&&s.items){var d=defaultSettings(),k;for(k in d.items)if(s.items[k]===undefined)s.items[k]=d.items[k];return s}}catch(e){}
+  return defaultSettings();
+}
+function saveSettings(){try{localStorage.setItem(SETKEY,JSON.stringify(settings))}catch(e){}}
+function enabledItemKeys(){var a=[],k;for(k in settings.items)if(settings.items[k])a.push(k);return a}
+
+/* ---------------- 状态 ---------------- */
+function loadState(){
+  try{var s=JSON.parse(localStorage.getItem(KEY));if(s&&Array.isArray(s.rounds)&&s.rounds.length){
+    for(var i=0;i<s.rounds.length;i++)if(!s.rounds[i].dbl)s.rounds[i].dbl={player:0,opponent:0};
+    return s}}catch(e){}
+  return null;
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+function curRound(){return state.rounds[state.rounds.length-1]}
+function isViewingCurrent(){return state.view===state.rounds.length-1}
+function statOf(r){
+  var rem=r.order.length,live=0,i;
+  for(i=0;i<rem;i++)if(r.order[i]==='live')live++;
+  return {rem:rem,liveRem:live,blankRem:rem-live};
+}
+function getHp(side,r){return side==='player'?r.hpP:r.hpO}
+function setHp(side,v,r){v=Math.max(0,Math.min(r.hpMax,v));if(side==='player')r.hpP=v;else r.hpO=v;return v}
+function deadOf(r){return r.hpP<=0||r.hpO<=0}
+function shiftKnown(k){
+  var o={},p;
+  for(p in k){var n=parseInt(p,10)-1;if(n>=1)o[n]=k[p]}
+  return o;
+}
+/* 装填：2/4/8 发，实弹与空包数量差 ≤ 2，且至少各 1 发 */
+function makeLoad(){
+  var N=[2,4,8][randInt(3)];
+  var minL=Math.max(1,Math.ceil((N-2)/2));
+  var maxL=Math.min(N-1,Math.floor((N+2)/2));
+  var L=minL+randInt(maxL-minL+1);
+  var shells=[],i;
+  for(i=0;i<L;i++)shells.push('live');
+  for(i=0;i<N-L;i++)shells.push('blank');
+  return {N:N,L:L,order:shuffled(shells)};
+}
+function pushRound(m,r){
+  var load=makeLoad();
+  var hp=(randInt(2)===0)?2:4;
+  var rd={
+    m:m,r:r,N:load.N,L:load.L,order:load.order,
+    mag:1,loads:[{N:load.N,L:load.L}],pastShots:[],fired:[],
+    hpMax:hp,hpP:hp,hpO:hp,turn:'player',cuffed:null,
+    items:{player:[],opponent:[]},dbl:{player:0,opponent:0},known:{},lastEject:null,
+    winner:null,itemLog:[],seq:0
+  };
+  state.rounds.push(rd);
+  state.view=state.rounds.length-1;
+  var deal=dealItems(rd);
+  save();render();
+  showLoad(rd,deal);
+}
+function startMatch(){
+  var m=state.rounds.length?state.rounds[state.rounds.length-1].m+1:1;
+  pushRound(m,1);
+}
+function startRoundNext(){
+  var last=state.rounds[state.rounds.length-1];
+  pushRound(last.m,last.r+1);
+}
+function matchWins(m){
+  var p=0,o=0,i;
+  for(i=0;i<state.rounds.length;i++){
+    var rd=state.rounds[i];
+    if(rd.m===m&&rd.winner){if(rd.winner==='player')p++;else o++}
+  }
+  return {p:p,o:o};
+}
+function matchStats(m){
+  var s=0,i;
+  for(i=0;i<state.rounds.length;i++){
+    var rd=state.rounds[i];
+    if(rd.m===m)s+=rd.pastShots.length+rd.fired.length;
+  }
+  return s;
+}
+
+/* ---------------- 开枪 ---------------- */
+function fire(target){
+  if(!isViewingCurrent())return;
+  var r=curRound();
+  if(deadOf(r))return;
+  var st=statOf(r);
+  if(st.rem<=0)return;
+  var shooter=r.turn;
+  var result=r.order[0];
+  var victim=(target==='self')?shooter:other(shooter);
+  var dmg=1;
+  if(r.dbl[shooter]>0){dmg=2;r.dbl[shooter]--}
+  r.fired.push({shooter:shooter,target:target,result:result,hpBefore:(result==='live')?getHp(victim,r):null,dmg:dmg,seq:++r.seq});
+  r.order.shift();
+  r.known=shiftKnown(r.known);
+  if(result==='live')setHp(victim,getHp(victim,r)-dmg,r);
+  var keep=(result==='blank'&&target==='self');
+  var skipped=null;
+  if(!keep){
+    var next=other(shooter);
+    if(r.cuffed===next){r.cuffed=null;skipped=next}
+    else r.turn=next;
+  }
+  r.fired[r.fired.length-1].cuffSkip=skipped;
+  save();render();
+  sfx(result==='live'?'live':'blank');
+  try{navigator.vibrate&&navigator.vibrate(result==='live'?[70,40,110]:25)}catch(e){}
+  if(result==='live'){
+    document.body.classList.remove('flash','shake');
+    void document.body.offsetWidth;
+    document.body.classList.add('flash','shake');
+    setTimeout(function(){document.body.classList.remove('flash','shake')},650);
+  }
+  showReveal(shooter,target,result,victim,skipped);
+}
+/* 覆盖层关闭后的统一出口 */
+function afterAction(){
+  var r=curRound();
+  if(deadOf(r)){finishRound();return}
+  if(statOf(r).rem===0){dealReload();return}
+}
+function undo(){
+  if(!isViewingCurrent())return;
+  var r=curRound();
+  if(r.winner)return;
+  if(!r.fired.length)return;
+  if(r.itemLog.length&&r.itemLog[r.itemLog.length-1].seq>r.fired[r.fired.length-1].seq){toast('道具使用不可撤销');return}
+  var s=r.fired.pop();
+  if(s.result==='live'&&s.hpBefore!==null){
+    var victim=(s.target==='self')?s.shooter:other(s.shooter);
+    setHp(victim,Math.min(r.hpMax,getHp(victim,r)+(s.dmg||1)),r);
+    if(s.dmg===2)r.dbl[s.shooter]++;
+  }
+  if(s.cuffSkip)r.cuffed=s.cuffSkip;
+  r.turn=s.shooter;
+  save();render();sfx('ui');
+}
+function toggleTurn(){
+  if(!isViewingCurrent())return;
+  var r=curRound();
+  if(deadOf(r))return;
+  r.turn=other(r.turn);
+  save();render();sfx('ui');
+}
+function nextAction(){
+  if(!isViewingCurrent())return;
+  var r=curRound();
+  if(deadOf(r)){
+    var w=matchWins(r.m);
+    if(w.p>=2||w.o>=2||r.r>=3)showMatchEnd();
+    else showRoundWin(r);
+    return;
+  }
+  if(statOf(r).rem===0){dealReload();return}
+  confirmModal({icon:'🆕',title:'放弃本局重开？',body:'当前对局进度将作废，重新开始一局（新的第 1 回合）。',ok:'重开一局',danger:true,onOk:startMatch});
+}
+
+/* ---------------- 回合 / 整局结算 ---------------- */
+function finishRound(){
+  var r=curRound();
+  r.winner=(r.hpP<=0)?'opponent':'player';
+  save();render();
+  var w=matchWins(r.m);
+  if(w.p>=2||w.o>=2||r.r>=3)showMatchEnd();
+  else showRoundWin(r);
+}
+function showRoundWin(r){
+  var w=matchWins(r.m);
+  pendingOk=startRoundNext;
+  sfx(r.winner==='player'?'win':'lose');
+  openOv('<div class="ov-box modal">'
+    +'<div class="m-icon">'+(r.winner==='player'?'🏆':'💀')+'</div>'
+    +'<div class="r-title" style="font-size:24px;letter-spacing:3px;color:'+(r.winner==='player'?'#ffd27a':'#ff8589')+'">'+NAME[r.winner]+'赢下第 '+r.r+' 回合</div>'
+    +'<div class="m-body">当前比分　你 <b>'+w.p+'</b> : <b>'+w.o+'</b> 对方'
+    +'<br>下一回合血量重新随机（2 或 4），道具清空</div>'
+    +'<div class="ov-btns"><button class="cta" data-action="ov-ok">进入下一回合</button>'
+    +'<button class="ghost" style="justify-content:center" data-action="ov-close">先看看记录</button></div>'
+    +'</div>');
+}
+function showMatchEnd(){
+  var r=curRound(),w=matchWins(r.m);
+  var youWin=w.p>w.o;
+  pendingOk=startMatch;
+  sfx(youWin?'win':'lose');
+  openOv('<div class="ov-box modal">'
+    +'<div class="m-icon">'+(youWin?'🏆':'💀')+'</div>'
+    +'<div class="r-title" style="letter-spacing:3px;color:'+(youWin?'#ffd27a':'#ff8589')+'">'+(youWin?'你赢下整局！':'对方赢下整局')+'</div>'
+    +'<div class="m-body">三局两胜 · 最终比分　你 <b>'+w.p+'</b> : <b>'+w.o+'</b> 对方'
+    +'<br>本局共 <b>'+matchStats(r.m)+'</b> 枪</div>'
+    +'<div class="ov-btns"><button class="cta" data-action="ov-ok">开新一局</button>'
+    +'<button class="ghost" style="justify-content:center" data-action="ov-close">先看看记录</button></div>'
+    +'</div>');
+}
+function wipe(){
+  confirmModal({icon:'🗑️',title:'清空全部记录？',body:'将删除所有局、回合与开枪记录（道具设置保留），不可恢复。',
+    ok:'全部清空',danger:true,onOk:function(){
+      try{localStorage.removeItem(KEY)}catch(e){}
+      var m=state.muted;
+      state={rounds:[],view:-1,muted:m};
+      startMatch();
+    }});
+}
+
+/* ---------------- 道具 ---------------- */
+function dealItems(r){
+  var pool=enabledItemKeys();
+  var gains={player:[],opponent:[]},dropped={player:0,opponent:0},empty=false,sides=['player','opponent'],i,j;
+  if(!pool.length)return {gains:gains,dropped:dropped,empty:true};
+  for(i=0;i<sides.length;i++){
+    var side=sides[i];
+    for(j=0;j<2;j++){
+      var k=pool[randInt(pool.length)];
+      if(r.items[side].length>=8)dropped[side]++;
+      else {r.items[side].push(k);gains[side].push(k)}
+    }
+  }
+  return {gains:gains,dropped:dropped,empty:false};
+}
+function dealReload(){
+  var r=curRound();
+  r.pastShots=r.pastShots.concat(r.fired.map(function(s){return {mag:r.mag,shooter:s.shooter,target:s.target,result:s.result}}));
+  r.fired=[];
+  var deal=dealItems(r);
+  var load=makeLoad();
+  r.N=load.N;r.L=load.L;r.order=load.order;
+  r.mag++;r.loads.push({N:load.N,L:load.L});
+  r.known={};
+  pushNews(r,'重新装弹：实弹 '+load.L+' / 空包 '+(load.N-load.L)+'（构成公开）');
+  save();render();
+  showResupply(deal,load,r);
+}
+function canUseItem(side,key){
+  var r=curRound();
+  if(!isViewingCurrent())return {ok:false,reason:'请先返回当前回合'};
+  if(deadOf(r))return {ok:false,reason:'本回合已结束'};
+  if(side!==r.turn)return {ok:false,reason:'还没轮到'+NAME[side]+'行动'};
+  var st=statOf(r),p,any=false;
+  if(key==='cigarette'&&getHp(side,r)>=r.hpMax)return {ok:false,reason:'血量已满'};
+  if(key==='cuff'&&r.cuffed===other(side))return {ok:false,reason:'对方已被铐住'};
+  if(key==='dtrg'&&r.dbl[side]>0)return {ok:false,reason:'双发扳机已生效'};
+  if(key==='phone'){
+    if(st.rem<2)return {ok:false,reason:'剩余不足 2 发，无从探测'};
+    for(p=2;p<=st.rem;p++)if(!r.known[p])any=true;
+    if(!any)return {ok:false,reason:'仓内情报已全部得知'};
+  }
+  if(key==='mag'&&r.known[1])return {ok:false,reason:'下一发已得知'};
+  if(key==='inv'&&st.rem<1)return {ok:false,reason:'弹仓已空'};
+  if(key==='beer'&&st.rem<1)return {ok:false,reason:'弹仓已空'};
+  if(key==='adr'&&!r.items[other(side)].length)return {ok:false,reason:'对方没有道具'};
+  return {ok:true};
+}
+/* 情报来源日志（公开事件 + 自己的探测结果） */
+function pushNews(r,txt){
+  r.news=r.news||[];
+  r.news.push({m:r.mag,txt:txt});
+  if(r.news.length>8)r.news.shift();
+}
+/* 纯道具效果：不写日志、不移除道具；depth 防兴奋剂连锁递归 */
+function itemEffect(side,key,stealKey,depth){
+  var r=curRound(),note='',pub='';
+  if(key==='cigarette'){
+    setHp(side,getHp(side,r)+1,r);
+    note=NAME[side]+'回复 1♥（当前 ♥×'+getHp(side,r)+'）';
+    pub=NAME[side]+'点了一支香烟，回复 1♥';
+  }else if(key==='pill'){
+    var good=(randInt(2)===0);
+    if(good){setHp(side,getHp(side,r)+2,r);note='药效不错！'+NAME[side]+'回复 2♥（当前 ♥×'+getHp(side,r)+'）'}
+    else{setHp(side,getHp(side,r)-1,r);note='药过期了…'+NAME[side]+'失去 1♥（当前 ♥×'+getHp(side,r)+'）'}
+    pub=NAME[side]+'吞下过期止痛药（'+(good?'+2♥':'−1♥')+'）';
+  }else if(key==='cuff'){
+    r.cuffed=other(side);
+    note=NAME[other(side)]+'的下一次行动将被跳过';
+    pub=NAME[side]+'铐住了'+NAME[other(side)];
+    pushNews(r,pub+'（公开）');
+  }else if(key==='phone'){
+    var st=statOf(r),unk=[],p;
+    for(p=2;p<=st.rem;p++)if(!r.known[p])unk.push(p);
+    if(!unk.length){note='仓内情报已全部得知（浪费）';pub=NAME[side]+'用手机探测了仓内一发（无新情报）'}
+    else{
+      var pos=unk[randInt(unk.length)];
+      r.known[pos]=r.order[pos-1];
+      note='第 '+pos+' 发是'+(r.order[pos-1]==='live'?'实弹！':'空包弹');
+      pub=NAME[side]+'用手机探测了仓内一发';
+      pushNews(r,'手机探测：第 '+pos+' 发 = '+(r.order[pos-1]==='live'?'实弹':'空包'));
+    }
+  }else if(key==='mag'){
+    r.known[1]=r.order[0];
+    note='下一发是'+(r.order[0]==='live'?'实弹！':'空包弹');
+    pub=NAME[side]+'用放大镜观察了下一发';
+    pushNews(r,'放大镜：下一发 = '+(r.order[0]==='live'?'实弹':'空包'));
+  }else if(key==='inv'){
+    if(statOf(r).rem<1){note='弹仓已空（浪费）';pub=NAME[side]+'使用逆转器（弹仓已空）'}
+    else{
+      var was=r.order[0];
+      r.order[0]=(was==='live')?'blank':'live';
+      if(was==='live')r.L--;else r.L++;
+      if(r.known[1])r.known[1]=r.order[0];
+      note='下一发性质已反转'+(r.known[1]?('，现在是'+(r.order[0]==='live'?'实弹！':'空包弹')):'（弹种仍未公开）');
+      pub=NAME[side]+'使用逆转器反转了下一发';
+      pushNews(r,'逆转器反转了下一发（弹种未公开，概率已按反转重算）');
+    }
+  }else if(key==='beer'){
+    if(statOf(r).rem<1){note='弹仓已空（浪费）';pub=NAME[side]+'喝下啤酒（弹仓已空）'}
+    else{
+      var ejected=r.order.shift();
+      r.known=shiftKnown(r.known);
+      r.lastEject={mag:r.mag,result:ejected};
+      note='退出一发：'+(ejected==='live'?'实弹！':'空包弹')+(statOf(r).rem===0?'（弹仓已空！）':'');
+      pub=NAME[side]+'喝下啤酒，退出一发：'+(ejected==='live'?'实弹':'空包');
+      pushNews(r,'啤酒退出一发：'+(ejected==='live'?'实弹':'空包')+'（公开，双方概率重算）');
+    }
+  }else if(key==='dtrg'){
+    r.dbl[side]++;
+    note='下一次开枪伤害变为 2♥';
+    pub=NAME[side]+'装上双发扳机，下次开枪伤害 ×2';
+    pushNews(r,NAME[side]+'的双发扳机已就绪（公开）');
+  }else if(key==='adr'){
+    var oi=r.items[other(side)];
+    if(!oi.length||(depth||0)>=3){note='没有可偷取的道具';pub=NAME[side]+'用兴奋剂（没有目标）'}
+    else{
+      var si2=0;
+      if(stealKey){while(si2<oi.length&&oi[si2]!==stealKey)si2++}
+      else si2=randInt(oi.length);
+      var stolen=oi.splice(si2,1)[0];
+      var sub=itemEffect(side,stolen,undefined,(depth||0)+1);
+      note='偷到「'+ITEMS[stolen].n+'」并立即使用：'+sub.note;
+      pub=NAME[side]+'用兴奋剂偷走了'+NAME[other(side)]+'的「'+ITEMS[stolen].n+'」并立即使用';
+      pushNews(r,NAME[side]+'偷走「'+ITEMS[stolen].n+'」并立即使用（公开）');
+    }
+  }
+  return {note:note,pub:pub};
+}
+/* silent=true 供 AI 静默使用；返回公开播报文本 */
+function useItem(side,key,idx,silent,stealKey){
+  var r=curRound();
+  var eff=itemEffect(side,key,stealKey,0);
+  var note=eff.note,pub=eff.pub;
+  r.items[side].splice(idx,1);
+  r.itemLog.push({side:side,key:key,seq:++r.seq,note:note});
+  sfx(key==='pill'?(note.indexOf('不错')>=0?'heal':'bad'):({cigarette:'heal',cuff:'cuff',phone:'info',mag:'info',inv:'inv',beer:'beer',adr:'steal',dtrg:'trigger'}[key]||'item'));
+  save();render();
+  if(!silent){
+    showItemResult(key,note);
+    return note;
+  }
+  return pub;
+}
+
+/* ---------------- 渲染 ---------------- */
+function fmtPct(p){
+  var v=Math.round(p*1000)/10;
+  return (v%1===0)?String(Math.round(v)):v.toFixed(1);
+}
+function shellStrip(n){
+  if(!n)return '<span class="none">— 空 —</span>';
+  var s='',i;
+  for(i=0;i<n;i++)s+='<span class="shell mini">?</span>';
+  return s;
+}
+function hearts(hp,max){
+  var s='',i;
+  for(i=0;i<max;i++)s+='<span class="'+(i<hp?'hf':'he')+'">'+(i<hp?'♥':'♡')+'</span>';
+  return s;
+}
+function itembarHtml(r,side){
+  var inv=r.items[side],slots='',i;
+  var active=isViewingCurrent()&&!deadOf(r);
+  var clickable=active&&side===r.turn;
+  var seen={},stacks=[];
+  for(i=0;i<inv.length;i++){
+    var k=inv[i];
+    if(seen[k]){seen[k].c++;continue}
+    seen[k]={k:k,i:i,c:1};
+    stacks.push(seen[k]);
+  }
+  for(i=0;i<stacks.length;i++){
+    var stk=stacks[i],badge=(stk.c>1?'<span class="cnt">'+stk.c+'</span>':'');
+    var tip=ITEMS[stk.k].n+(stk.c>1?' ×'+stk.c:'');
+    slots+=(clickable
+      ?'<button class="item-slot" data-action="item" data-k="'+stk.k+'" data-i="'+stk.i+'" data-side="'+side+'" aria-label="'+tip+'">'+ic(stk.k)+badge+'</button>'
+      :'<span class="item-slot" title="'+tip+'">'+ic(stk.k)+badge+'</span>');
+  }
+  for(i=inv.length;i<8;i++)slots+='<span class="item-slot empty"></span>';
+  return '<div class="itembar-title">'+NAME[side]+'的道具（'+inv.length+'/8）'+(clickable?' · 点击使用':'')+'</div><div class="itembar">'+slots+'</div>';
+}
+function intelHtml(r){
+  var chips=[],p;
+  if(r.lastEject)chips.push('<span class="info-chip">上退(M'+r.lastEject.mag+')：'+(r.lastEject.result==='live'?'实弹':'空包')+'</span>');
+  var ks=[];
+  for(p in r.known)ks.push(parseInt(p,10));
+  ks.sort(function(a,b){return a-b});
+  for(p=0;p<ks.length;p++){
+    var pos=ks[p],t=r.known[pos];
+    chips.push('<span class="info-chip '+t+'">第'+pos+'发 '+(t==='live'?'实弹':'空包')+'</span>');
+  }
+  var news='';
+  if(r.news&&r.news.length){
+    var nl=r.news.slice(-5),ni;
+    news='<div class="newsbox"><div class="news-t">📡 情报来源（最近 5 条）</div>';
+    for(ni=0;ni<nl.length;ni++)news+='<div class="news-i"><span class="m">M'+nl[ni].m+'</span>'+nl[ni].txt+'</div>';
+    news+='</div>';
+  }
+  if(!chips.length&&!news)return '';
+  return news+'<div class="infobar">'+chips.join('')+'</div>';
+}
+function shotRow(s,i,total){
+  var last=(i===total-1)?' last':'';
+  var dmg='';
+  if(s.result==='live'){
+    var victim=(s.target==='self')?s.shooter:other(s.shooter);
+    dmg='<span class="dmg">−'+(s.dmg||1)+'♥ '+(victim==='player'?NAME.player:NAME.opponent)+'</span>';
+  }
+  var mtag=(s.mag&&s.mag>1)?'<span class="mtag">弹'+s.mag+'</span>':'';
+  return '<li class="shot '+s.result+last+'">'
+    +'<span class="no">#'+(i+1)+'</span>'
+    +'<span class="who">'+NAME[s.shooter]+' → '+TARGET[s.target]+' '+mtag+dmg+'</span>'
+    +'<span class="tag">'+(s.result==='live'?'💥 实弹':'💨 空包')+'</span></li>';
+}
+function shotsHtml(r,interactive){
+  var all=r.pastShots.concat(r.fired);
+  if(!all.length)return '<div class="empty">尚未开枪 — 选择上方按钮开始</div>';
+  var html='<ul class="shots">'+all.map(function(s,i){return shotRow(s,i,all.length)}).join('')+'</ul>';
+  if(interactive&&r.fired.length)html+='<button class="ghost" data-action="undo">↩ 撤销上一枪</button>';
+  return html;
+}
+
+function render(){renderBar();renderMain();renderSound()}
+
+function renderBar(){
+  var nav=$('#roundBar');
+  if(!state.rounds.length){nav.innerHTML='';return}
+  var html='',i;
+  for(i=0;i<state.rounds.length;i++){
+    var rd=state.rounds[i];
+    var done=(rd.winner!==null);
+    var active=(state.view===i)?' active':'';
+    var dot=(i===state.rounds.length-1)?' live-dot':'';
+    var winCls=done?(rd.winner==='player'?' win-p':' win-o'):'';
+    html+='<button class="chip'+active+winCls+'" data-action="view" data-i="'+i+'">'
+      +'<span class="dot'+dot+'"></span>局'+rd.m+'·R'+rd.r+(done?'<span class="done">✓</span>':'')+'</button>';
+  }
+  nav.innerHTML=html;
+  var el=nav.children[state.view];
+  if(el&&el.scrollIntoView)el.scrollIntoView({inline:'center',block:'nearest'});
+}
+
+function renderMain(){
+  var m=$('#main');
+  if(!state.rounds.length){m.innerHTML='';return}
+  var idx=state.view,r=state.rounds[idx],st=statOf(r);
+  var liveView=isViewingCurrent(),turn=r.turn;
+  var p=st.rem>0?st.liveRem/st.rem:null;
+  var dead=deadOf(r);
+  var numCls=['hot','cold','sure'].filter(function(c){
+    return (c==='hot'&&p>=0.5)||(c==='cold'&&st.liveRem===0&&st.rem>0)||(c==='sure'&&st.blankRem===0&&st.rem>0);
+  }).join(' ');
+
+  var probBlock;
+  if(st.rem===0){
+    probBlock='<div class="prob-empty">弹仓已空</div><div class="bar"><div class="fill" style="width:0%"></div></div>';
+  }else{
+    probBlock='<div class="prob-num '+numCls+'">'+fmtPct(p)+'<span class="pct">%</span></div>'
+      +'<div class="frac">'+st.liveRem+' / '+st.rem+'</div>'
+      +'<div class="bar"><div class="fill" style="width:'+(Math.round(p*1000)/10)+'%"></div></div>';
+  }
+
+  var html='';
+  if(!liveView){
+    var wnote=r.winner?('本回合胜者：'+NAME[r.winner]):'该回合未完成';
+    html+='<div class="viewnote">👁 正在查看历史回合（只读）· '+wnote+' · 点击上方标签可返回当前回合</div>';
+  }
+  html+='<section class="card hero">'
+    +'<div class="row1"><span class="badge">第 '+r.m+' 局 · 回合 '+r.r+'/3 · 第'+r.mag+'次装填</span>'
+    +'<span class="sub"><em style="color:#ff8589">实弹 '+r.L+'</em> / <em style="color:#b7c2d0">空包 '+(r.N-r.L)+'</em></span>'
+    +'<span class="pill-remain'+(liveView?'':' grey')+'">剩余 '+st.rem+'/'+r.N+'</span></div>'
+    +'<div class="hpbox">'
+    +'<div class="hprow'+(r.hpP<=0?' dead':'')+'"><span class="hplabel">'+NAME.player+'</span><span class="hearts">'+hearts(r.hpP,r.hpMax)+'</span>'+(r.cuffed==='player'?'<span class="cufftag">'+ic('cuff')+' 被铐</span>':'')+(r.dbl.player>0?'<span class="cufftag">'+ic('dtrg')+' 下枪×2</span>':'')+'</div>'
+    +itembarHtml(r,'player')
+    +'<div class="hprow'+(r.hpO<=0?' dead':'')+'" style="margin-top:6px"><span class="hplabel">'+NAME.opponent+'</span><span class="hearts">'+hearts(r.hpO,r.hpMax)+'</span>'+(r.cuffed==='opponent'?'<span class="cufftag">'+ic('cuff')+' 被铐</span>':'')+(r.dbl.opponent>0?'<span class="cufftag">'+ic('dtrg')+' 下枪×2</span>':'')+'</div>'
+    +itembarHtml(r,'opponent')
+    +'</div>'
+    +'<div class="prob"><div class="prob-label">下一发 · 实弹概率</div>'+probBlock
+    +'<div class="pills"><span class="pill live">实弹剩 '+st.liveRem+'</span><span class="pill blank">空包剩 '+st.blankRem+'</span></div>'
+    +'<div class="chamber">'+shellStrip(st.rem)+'</div>'
+    +intelHtml(r)
+    +'</div>'
+    +(liveView&&!dead?'<button class="turnline" data-action="turn">🎧 当前持枪：<b>'+NAME[turn]+'</b><span class="swap">⇄ 点击手动切换</span></button>':'')
+    +(dead?'<div class="empty" style="padding-top:10px">💀 本回合已结束（'+NAME[r.hpP<=0?'player':'opponent']+'倒下）</div>':'')
+    +'</section>';
+
+  if(liveView){
+    if(!dead){
+      var dis=(st.rem===0)?' disabled':'';
+      html+='<section class="fire">'
+        +'<button class="fire-btn self" data-action="fire" data-t="self"'+dis+'><span class="fico">🙂</span><span>朝自己开枪</span><small>空包弹 → 可再开一枪</small></button>'
+        +'<button class="fire-btn foe" data-action="fire" data-t="other"'+dis+'><span class="fico">😈</span><span>朝对方开枪</span><small>实弹 → 对方 −1♥</small></button>'
+        +'</section>';
+    }
+    html+='<section class="card seq"><div class="card-head"><h2>已开枪序列</h2><span class="sub">共 '+(r.pastShots.length+r.fired.length)+' 枪</span></div>'
+      +shotsHtml(r,liveView&&!dead)
+      +'</section>';
+    if(dead){
+      html+='<button class="cta" data-action="next" id="ctaPulse">🏁 查看本回合结算</button>';
+    }else if(st.rem===0){
+      html+='<button class="cta" data-action="next" id="ctaPulse">🎁 弹仓已空 · 发放道具并重装</button>';
+    }
+    html+='<button class="mini" data-action="giveup">🆕 放弃本局，重开对局</button>';
+  }else{
+    html+='<section class="card seq"><div class="card-head"><h2>本回合开枪序列</h2><span class="sub">共 '+(r.pastShots.length+r.fired.length)+' 枪</span></div>'
+      +shotsHtml(r,false)
+      +(st.rem>0?'<div class="empty">另有 '+st.rem+' 发未击发（实弹 '+st.liveRem+' / 空包 '+st.blankRem+'）</div>':'')
+      +'</section>';
+  }
+
+  html+='<details class="rules"><summary>📖 玩法说明</summary><ul>'
+    +'<li>共 <b>3 回合</b>（三局两胜）；每回合双方血量<b>随机 2 或 4</b>，有人倒下才结束回合。</li>'
+    +'<li>每回合随机装入 <b>2 / 4 / 8</b> 发（差 ≤2、至少各 1），顺序保密；<b>回合开局</b>与<b>弹仓打空重装</b>时，双方各得 2 个道具，同一回合可多次续弹。</li>'
+    +'<li><b>使用道具不消耗行动权</b>，可连用多个再开枪；每方道具格子上限 8；<b>道具用一次即从栏中移除</b>，同类道具会显示 ×n 数量。</li>'
+    +'<li>道具：🚬香烟 +1♥｜💊过期止痛药 50%+2♥/50%−1♥（可致死）｜⛓手铐 跳过对方下次行动｜📱手机 查随机一发（非下一发）｜🔍放大镜 查下一发｜🔄逆转器 反转下一发｜🍺啤酒 退掉下一发｜💉兴奋剂 偷对方一个道具（<b>自选并立即使用</b>）｜🔫双发扳机 下一次开枪伤害 ×2。</li>'
+    +'<li>情报（放大镜/手机/退弹）会显示在情报条里，开枪或退弹后位置自动前移。</li>'
+    +'<li>轮次规则：空包弹打自己 → 持枪方继续；其余情况 → 交给对方（手铐会强制跳过）。可点击持枪栏手动切换。</li>'
+    +'<li>道具可在右上角 ⚙️ 设置中逐个启用/关闭；误触可撤销上一枪（道具不可撤销）。</li>'
+    +'</ul></details>'
+    +'<div class="footer">'
+    +'<a class="link" href="versus-ai.html">🤖 切换到 AI 版（单人挑战）</a>'
+    +'<a class="link" href="tracker.html">📊 切换到记录版（手动录入弹数）</a>'
+    +'<button class="link danger" data-action="wipe">清空全部记录</button>'
+    +'<span class="link" style="text-decoration:none">图标：game-icons.net（Lorc / Delapouite）· CC BY 3.0</span>'
+    +'</div>';
+
+  m.innerHTML=html;
+  $('#setBtn')&&0;
+}
+function renderSound(){var b=$('#soundBtn');if(b)b.textContent=state.muted?'🔇':'🔊'}
+function toast(msg){
+  var t=$('#toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){t.classList.remove('show')},1700);
+}
+
+/* ---------------- 覆盖层 ---------------- */
+function clearOvTimers(){ovTimers.forEach(clearTimeout);ovTimers=[]}
+function openOv(html){var o=$('#overlay');o.innerHTML=html;o.classList.remove('hidden')}
+function closeOv(){clearOvTimers();pendingOk=null;$('#overlay').classList.add('hidden');$('#overlay').innerHTML=''}
+
+function showLoad(r,deal){
+  var shells=[],i;
+  for(i=0;i<r.L;i++)shells.push('s-live');
+  for(i=0;i<r.N-r.L;i++)shells.push('s-blank');
+  var dealHtml='';
+  if(deal&&!deal.empty){
+    dealHtml='<div class="rsv-cols">'
+      +'<div class="rsv-col"><h3>开局道具 · '+NAME.player+'</h3><div class="rsv-items">'+deal.gains.player.map(function(k){return '<span title="'+ITEMS[k].n+'">'+ic(k)+'</span>'}).join('')+'</div></div>'
+      +'<div class="rsv-col"><h3>开局道具 · '+NAME.opponent+'</h3><div class="rsv-items">'+deal.gains.opponent.map(function(k){return '<span title="'+ITEMS[k].n+'">'+ic(k)+'</span>'}).join('')+'</div></div>'
+      +'</div>';
+  }
+  openOv('<div class="ov-box load" id="loadBox">'
+    +'<div class="ov-title">第 '+r.m+' 局 · 回合 '+r.r+'/3</div>'
+    +'<div class="ov-sub">庄家装入 <b>'+r.N+'</b> 发弹药 · 双方血量 <b>♥×'+r.hpMax+'</b> · 双方各得 <b>2</b> 个道具</div>'
+    +'<div class="load-shells" id="loadShells">'+shells.map(function(c,i){return '<span class="shell big '+c+' pop" style="animation-delay:'+(i*90)+'ms"></span>'}).join('')+'</div>'
+    +'<div class="load-legend"><span class="pill live">实弹 ×'+r.L+'</span><span class="pill blank">空包 ×'+(r.N-r.L)+'</span></div>'
+    +dealHtml
+    +'<div class="load-msg" id="loadMsg">装填中…</div>'
+    +'<button class="ghost" data-action="ov-skip">进入对局 →</button>'
+    +'</div>');
+  sfx('deal');
+  var t1=r.N*90+700,t2=r.N*90+1700,t3=r.N*90+2600;
+  ovTimers.push(setTimeout(function(){
+    var b=$('#loadShells');if(b)b.classList.add('shuffling');
+    var msg=$('#loadMsg');if(msg)msg.textContent='顺序打乱中…';
+    sfx('reload');
+  },t1));
+  ovTimers.push(setTimeout(function(){
+    var msg=$('#loadMsg');if(msg){msg.textContent='✅ 顺序已打乱 · 开始！';msg.classList.add('ok')}
+    sfx('ui');
+  },t2));
+  ovTimers.push(setTimeout(closeOv,t3));
+}
+
+function showReveal(shooter,target,result,victim,skipped){
+  var r=curRound();
+  var keep=(result==='blank'&&target==='self');
+  var dead=(getHp(victim,r)<=0);
+  var notes='';
+  if(result==='live'){
+    var dmg=(r.fired.length&&r.fired[r.fired.length-1].dmg)||1;
+    notes+='<div class="r-note dmg">'+NAME[victim]+'受到 '+dmg+' 点伤害 · 剩余 ♥×'+getHp(victim,r)+'</div>';
+    if(dmg===2)notes+='<div class="r-note warn">'+ic('dtrg')+' 双发扳机生效 · 伤害 ×2</div>';
+    if(dead)notes+='<div class="r-note dead">💀 '+NAME[victim]+'倒下了！</div>';
+  }
+  if(skipped){
+    notes+='<div class="r-note stay">'+ic('cuff')+' '+NAME[skipped]+'被手铐铐住，跳过一次行动！</div>';
+  }else if(!dead){
+    if(keep)notes+='<div class="r-note stay">💨 空包弹打自己 · '+NAME[shooter]+'继续持枪</div>';
+    else notes+='<div class="r-note">回合转移 → '+NAME[other(shooter)]+'持枪</div>';
+  }
+  openOv('<div class="ov-box reveal" data-action="ov-continue">'
+    +'<div class="shell r-shell '+(result==='live'?'s-live':'s-blank')+'"></div>'
+    +(result==='live'?'<div class="boomfx">💥</div>':'<div class="pufffx">💨</div>')
+    +'<div class="r-title '+result+'">'+(result==='live'?'实弹！':'空包弹')+'</div>'
+    +'<div class="r-sub">第 '+(r.pastShots.length+r.fired.length)+' 枪 · '+NAME[shooter]+' → '+TARGET[target]+'</div>'
+    +notes
+    +'<div class="ov-btns"><button class="cta" data-action="ov-continue">'+(dead?'查看结果':'继续')+'</button></div>'
+    +'</div>');
+}
+
+function showResupply(deal,load,r){
+  function col(side){
+    var g=deal.gains[side],h='',i;
+    if(deal.empty)h='<span class="rsv-note">道具已全部停用</span>';
+    else if(!g.length)h='<span class="rsv-note">格子已满，'+deal.dropped[side]+' 个道具溢出丢弃</span>';
+    else{
+      for(i=0;i<g.length;i++)h+='<span title="'+ITEMS[g[i]].n+'">'+ic(g[i])+'</span>';
+      if(deal.dropped[side])h+='<span class="rsv-note">+'+deal.dropped[side]+' 溢出丢弃</span>';
+    }
+    return '<div class="rsv-col"><h3>'+NAME[side]+'</h3><div class="rsv-items">'+h+'</div></div>';
+  }
+  var shells='',i;
+  for(i=0;i<load.L;i++)shells+='<span class="shell big s-live pop" style="animation-delay:'+(i*90)+'ms"></span>';
+  for(i=0;i<load.N-load.L;i++)shells+='<span class="shell big s-blank pop" style="animation-delay:'+((load.L+i)*90)+'ms"></span>';
+  openOv('<div class="ov-box">'
+    +'<div class="ov-title">弹仓已空 · 补给</div>'
+    +'<div class="ov-sub">双方各获得 <b>2</b> 个道具，装入第 <b>'+r.mag+'</b> 次弹药</div>'
+    +'<div class="rsv-cols">'+col('player')+col('opponent')+'</div>'
+    +'<div class="load-shells">'+shells+'</div>'
+    +'<div class="load-legend"><span class="pill live">实弹 ×'+load.L+'</span><span class="pill blank">空包 ×'+(load.N-load.L)+'</span></div>'
+    +'<div class="ov-btns"><button class="cta" data-action="ov-continue">继续对局 →</button></div>'
+    +'</div>');
+  sfx('deal');
+  ovTimers.push(setTimeout(function(){sfx('reload')},350));
+}
+
+function showItemResult(key,note){
+  var warn=(key==='pill'&&note.indexOf('失去')>=0)?' <span class="r-note warn" style="display:block;margin-top:8px">⚠️ 药物过期的副作用来了！</span>':'';
+  openOv('<div class="ov-box modal" data-action="item-ok">'
+    +'<div class="m-icon">'+ic(key)+'</div>'
+    +'<div class="r-title" style="font-size:22px;letter-spacing:2px">'+ITEMS[key].n+'</div>'
+    +'<div class="r-note">'+note+'</div>'+warn
+    +'<div class="ov-btns"><button class="cta" data-action="item-ok">继续</button></div>'
+    +'</div>');
+}
+function showItemPanel(side,key,idx){
+  var chk=canUseItem(side,key);
+  if(chk.ok&&key==='adr'){
+    var oi=curRound().items[other(side)];
+    if(oi.length===1){closeOv();useItem(side,key,idx,false,oi[0]);return}
+    var picks='',pi;
+    for(pi=0;pi<oi.length;pi++)picks+='<button class="pick-item" data-action="adr-steal" data-k="'+oi[pi]+'" data-i="'+idx+'" data-side="'+side+'">'+ic(oi[pi])+'<span>'+ITEMS[oi[pi]].n+'</span></button>';
+    openOv('<div class="ov-box modal">'
+      +'<div class="m-icon">'+ic('adr')+'</div>'
+      +'<div class="r-title" style="font-size:22px;letter-spacing:2px">选择要偷取的道具</div>'
+      +'<div class="pick-list">'+picks+'</div>'
+      +'<div class="ov-btns"><button class="ghost" style="justify-content:center" data-action="ov-cancel">取消</button></div>'
+      +'</div>');
+    return;
+  }
+  var warn='';
+  if(chk.ok&&key==='pill'){
+    var hp=getHp(side,curRound());
+    if(hp===curRound().hpMax)warn='<div class="r-note warn" style="margin-top:10px">当前满血：坏结果将直接 −1♥</div>';
+    else if(hp===1)warn='<div class="r-note warn" style="margin-top:10px">当前只剩 1♥：坏结果将直接倒下！</div>';
+  }
+  openOv('<div class="ov-box modal">'
+    +'<div class="m-icon">'+ic(key)+'</div>'
+    +'<div class="r-title" style="font-size:22px;letter-spacing:2px">'+ITEMS[key].n+'</div>'
+    +'<div class="m-body">'+ITEMS[key].d+'</div>'
+    +warn
+    +(chk.ok
+      ?'<div class="ov-btns"><button class="cta" data-action="item-use" data-k="'+key+'" data-i="'+idx+'" data-side="'+side+'">使 用</button>'
+        +'<button class="ghost" style="justify-content:center" data-action="ov-cancel">取消</button></div>'
+      :'<div class="r-note warn" style="margin-top:6px">'+chk.reason+'</div>'
+        +'<div class="ov-btns"><button class="ghost" style="justify-content:center" data-action="ov-cancel">知道了</button></div>')
+    +'</div>');
+}
+
+function openSettings(){
+  var rows='',k;
+  for(k in ITEMS){
+    rows+='<div class="setrow"><span class="lname"><span>'+ic(k)+'</span><span>'+ITEMS[k].n+'<div class="ldesc">'+ITEMS[k].d+'</div></span></span>'
+      +'<button class="tgl'+(settings.items[k]?' on':'')+'" data-action="set-toggle" data-k="'+k+'" aria-label="切换'+ITEMS[k].n+'"></button></div>';
+  }
+  openOv('<div class="ov-box modal">'
+    +'<div class="m-icon">'+ic('gear')+'</div>'
+    +'<div class="r-title" style="font-size:22px;letter-spacing:2px">道具设置</div>'
+    +'<div class="m-body" style="margin-bottom:4px">启用的道具才会随机发放；已获得的道具不受影响</div>'
+    +rows
+    +'<div class="m-btns" style="margin-top:18px"><button class="ghost" data-action="set-default">恢复默认</button><button class="cta" data-action="ov-cancel">完 成</button></div>'
+    +'</div>');
+}
+
+function confirmModal(opt){
+  pendingOk=opt.onOk||null;
+  openOv('<div class="ov-box modal">'
+    +'<div class="m-icon">'+(opt.icon||'❓')+'</div>'
+    +'<div class="r-title" style="font-size:22px;letter-spacing:2px">'+opt.title+'</div>'
+    +'<div class="m-body">'+opt.body+'</div>'
+    +'<div class="m-btns"><button class="ghost" data-action="ov-cancel">取消</button>'
+    +'<button class="cta'+(opt.danger?' danger':'')+'" data-action="ov-ok">'+(opt.ok||'确认')+'</button></div>'
+    +'</div>');
+}
+
+/* ---------------- 音效（WebAudio 全合成，无外部文件） ---------------- */
+function tone(f0,f1,dur,type,vol,at){
+  var t=AC.currentTime+(at||0),o=AC.createOscillator(),g=AC.createGain();
+  o.type=type||'sine';o.frequency.setValueAtTime(Math.max(1,f0),t);
+  if(f1&&f1!==f0)o.frequency.exponentialRampToValueAtTime(Math.max(1,f1),t+dur);
+  g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0008,t+dur);
+  o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+dur+.03);
+}
+function nz(dur,vol,freq,type,at){
+  var t=AC.currentTime+(at||0),len=Math.max(1,Math.floor(AC.sampleRate*dur)),
+      b=AC.createBuffer(1,len,AC.sampleRate),d=b.getChannelData(0),i;
+  for(i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2);
+  var s=AC.createBufferSource();s.buffer=b;
+  var f=AC.createBiquadFilter();f.type=type||'lowpass';f.frequency.value=freq||1200;
+  var g=AC.createGain();g.gain.value=vol;
+  s.connect(f);f.connect(g);g.connect(AC.destination);s.start(t);
+}
+function sfx(kind){
+  if(state.muted)return;
+  try{
+    AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+    if(AC.state==='suspended')AC.resume();
+    switch(kind){
+      case 'live': /* 实弹爆响：低频下坠 + 破裂噪声 + 高频脆响 */
+        tone(160,38,.42,'sine',.5);nz(.12,.35,2500);nz(.05,.22,6000,'highpass');break;
+      case 'blank': /* 空包：高压气噗 */
+        nz(.09,.18,900,'highpass');break;
+      case 'heal': /* 回复血量：上行暖音（G4→C5） */
+        tone(392,392,.09,'triangle',.16);tone(523.25,523.25,.16,'triangle',.16,.09);break;
+      case 'bad': /* 负面效果/受损：下行锯齿嗡鸣 */
+        tone(220,150,.3,'sawtooth',.13);break;
+      case 'cuff': /* 手铐：金属碰撞咔哒 */
+        nz(.06,.16,4200,'highpass');tone(1318.5,1318.5,.05,'square',.07);tone(1760,1760,.07,'square',.06,.07);break;
+      case 'info': /* 放大镜/手机：声呐回响 */
+        tone(1244.5,880,.16,'sine',.14);tone(880,880,.1,'sine',.1,.15);break;
+      case 'inv': /* 逆转器：上下来回滑音 */
+        tone(330,660,.12,'triangle',.13);tone(660,330,.13,'triangle',.13,.12);break;
+      case 'beer': /* 啤酒：开瓶闷响 + 气泡嘶嘶 */
+        nz(.07,.28,600);nz(.32,.1,2600,'highpass',.1);break;
+      case 'steal': /* 兴奋剂：噪声扫掠 + 上滑抢夺 */
+        nz(.16,.13,3000,'bandpass');tone(500,950,.16,'sine',.1);break;
+      case 'trigger': /* 双发扳机：两声上膛咔哒 */
+        tone(185,185,.045,'square',.12);nz(.03,.14,4000,'highpass');
+        tone(140,140,.055,'square',.12,.1);nz(.03,.14,3600,'highpass',.1);break;
+      case 'deal': /* 获得道具：三连上行琶音（C5-E5-G5） */
+        tone(523.25,523.25,.09,'triangle',.13);tone(659.25,659.25,.09,'triangle',.13,.09);tone(783.99,783.99,.14,'triangle',.13,.18);break;
+      case 'reload': /* 装弹：三声弹壳咔哒 */
+        nz(.04,.2,3600,'highpass');nz(.04,.2,3000,'highpass',.1);nz(.04,.2,3300,'highpass',.2);break;
+      case 'win': /* 胜利：大调琶音（C5-E5-G5-C6） */
+        tone(523.25,523.25,.13,'triangle',.17);tone(659.25,659.25,.13,'triangle',.17,.13);tone(783.99,783.99,.13,'triangle',.17,.26);tone(1046.5,1046.5,.26,'triangle',.17,.39);break;
+      case 'lose': /* 失败：下行阴郁三音 */
+        tone(311.1,311.1,.22,'sine',.15);tone(233.1,233.1,.26,'sine',.15,.22);tone(155.6,155.6,.42,'sine',.15,.48);break;
+      default: /* ui：轻点 */
+        tone(660,660,.06,'square',.05);
+    }
+  }catch(e){}
+}
+
+/* ---------------- 事件委托 ---------------- */
+document.addEventListener('click',function(e){
+  var el=e.target.closest('[data-action]');
+  if(!el)return;
+  var a=el.getAttribute('data-action');
+  if(a==='fire')fire(el.getAttribute('data-t'));
+  else if(a==='undo')undo();
+  else if(a==='turn')toggleTurn();
+  else if(a==='next')nextAction();
+  else if(a==='giveup'){confirmModal({icon:'🆕',title:'放弃本局重开？',body:'当前对局进度将作废，重新开始一局。',ok:'重开一局',danger:true,onOk:startMatch})}
+  else if(a==='item'){showItemPanel(el.getAttribute('data-side'),el.getAttribute('data-k'),parseInt(el.getAttribute('data-i'),10))}
+  else if(a==='item-use'){closeOv();useItem(el.getAttribute('data-side'),el.getAttribute('data-k'),parseInt(el.getAttribute('data-i'),10),false)}
+  else if(a==='adr-steal'){var asd=el.getAttribute('data-side');closeOv();useItem(asd,'adr',parseInt(el.getAttribute('data-i'),10),false,el.getAttribute('data-k'))}
+  else if(a==='item-ok'){closeOv();afterAction()}
+  else if(a==='settings')openSettings();
+  else if(a==='set-toggle'){var k=el.getAttribute('data-k');settings.items[k]=!settings.items[k];saveSettings();openSettings();sfx('ui')}
+  else if(a==='set-default'){settings=defaultSettings();saveSettings();openSettings();toast('已恢复默认设置');sfx('ui')}
+  else if(a==='view'){state.view=parseInt(el.getAttribute('data-i'),10);save();render();sfx('ui')}
+  else if(a==='wipe')wipe();
+  else if(a==='sound'){state.muted=!state.muted;save();renderSound();if(!state.muted)sfx('ui')}
+  else if(a==='ov-skip')closeOv();
+  else if(a==='ov-close')closeOv();
+  else if(a==='ov-continue'){closeOv();afterAction()}
+  else if(a==='ov-ok'){var f=pendingOk;pendingOk=null;closeOv();if(f)f()}
+  else if(a==='ov-cancel'){pendingOk=null;closeOv()}
+});
+
+/* ---------------- 启动 ---------------- */
+settings=loadSettings();
+state=loadState();
+if(!state){state={rounds:[],view:-1,muted:false};startMatch()}
+else render();
+</script>
+</body>
+</html>

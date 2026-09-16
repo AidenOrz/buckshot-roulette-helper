@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0a0c0f">
+<title>恶魔轮盘 · 记录版（手动录入弹数）</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0a0c0f;--panel:#14181e;--panel2:#1b212a;--line:#28303c;
+  --text:#ecebe8;--dim:#9aa4b1;--faint:#69737f;
+  --live:#e5484d;--live-soft:rgba(229,72,77,.14);
+  --blank:#93a1b3;--blank-soft:rgba(147,161,179,.13);
+  --gold:#e9b455;--gold-soft:rgba(233,180,85,.1);
+}
+html{-webkit-text-size-adjust:100%}
+body{
+  min-height:100vh;color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+  background:
+    radial-gradient(1100px 520px at 50% -8%,#181f29 0%,rgba(24,31,41,0) 60%),
+    radial-gradient(700px 380px at 50% 108%,rgba(229,72,77,.07),rgba(0,0,0,0) 70%),
+    var(--bg);
+  padding:calc(env(safe-area-inset-top) + 14px) 14px calc(env(safe-area-inset-bottom) + 28px);
+}
+#fx{position:fixed;inset:0;pointer-events:none;z-index:200;opacity:0;background:radial-gradient(circle at 50% 45%,rgba(229,72,77,0) 30%,rgba(229,72,77,.32) 100%)}
+body.flash #fx{animation:flash .55s ease-out}
+@keyframes flash{0%{opacity:0}18%{opacity:1}100%{opacity:0}}
+body.shake #wrap{animation:shake .5s ease-in-out}
+@keyframes shake{0%,100%{transform:none}20%{transform:translate(-7px,3px)}40%{transform:translate(6px,-3px)}60%{transform:translate(-4px,2px)}80%{transform:translate(3px,-1px)}}
+#wrap{max-width:560px;margin:0 auto}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.hidden{display:none!important}
+
+header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.logo{font-size:30px;filter:drop-shadow(0 2px 8px rgba(233,180,85,.35))}
+h1{font-size:17px;letter-spacing:2px}
+.titles p{font-size:9.5px;letter-spacing:3px;color:var(--faint);margin-top:3px}
+#soundBtn{margin-left:auto;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--panel);font-size:16px;display:flex;align-items:center;justify-content:center}
+
+#roundBar{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 10px;scrollbar-width:none}
+#roundBar::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;display:flex;align-items:center;gap:7px;padding:8px 13px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--dim);font-size:12.5px;font-weight:600}
+.chip.active{border-color:var(--gold);color:var(--text);background:var(--gold-soft)}
+.chip .dot{width:7px;height:7px;border-radius:50%;background:var(--faint);flex:0 0 auto}
+.chip .dot.live-dot{background:var(--live);box-shadow:0 0 8px rgba(229,72,77,.8);animation:blink 1.4s infinite}
+@keyframes blink{50%{opacity:.35}}
+.chip .done{color:var(--gold)}
+
+.viewnote{font-size:12px;color:var(--gold);background:var(--gold-soft);border:1px solid rgba(233,180,85,.3);border-radius:10px;padding:9px 12px;margin-bottom:10px;line-height:1.5}
+
+.card{background:linear-gradient(180deg,#161b22,#12161c);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.card-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px}
+.card-head h2{font-size:12px;letter-spacing:3px;color:var(--dim);font-weight:700}
+.sub{font-size:12px;color:var(--faint)}
+em{font-style:normal}
+
+.row1{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:6px}
+.badge{font-size:12px;font-weight:800;letter-spacing:1px;color:var(--gold);border:1px solid rgba(233,180,85,.4);background:var(--gold-soft);padding:4px 10px;border-radius:999px}
+.pill-remain{margin-left:auto;font-size:13px;font-weight:700;color:var(--gold);font-variant-numeric:tabular-nums}
+.pill-remain.grey{color:var(--faint)}
+
+.prob{text-align:center;padding:6px 0 2px}
+.prob-label{font-size:11px;letter-spacing:3px;color:var(--faint);margin-bottom:2px}
+.prob-num{font-size:clamp(52px,16vw,80px);font-weight:900;line-height:1.05;font-variant-numeric:tabular-nums;color:var(--text)}
+.prob-num.hot{background:linear-gradient(180deg,#ff7a7d,#e5484d);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 16px rgba(229,72,77,.35))}
+.prob-num.cold{color:var(--faint)}
+.prob-num .pct{font-size:.42em;font-weight:700;color:var(--dim);margin-left:2px}
+.prob-empty{font-size:22px;font-weight:800;color:var(--faint);letter-spacing:4px;padding:18px 0 10px}
+.frac{font-size:13px;color:var(--faint);font-variant-numeric:tabular-nums;margin:-2px 0 10px}
+.bar{height:10px;border-radius:999px;background:#232a33;overflow:hidden;border:1px solid #2c3540}
+.bar .fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#ff7a7d,#e5484d);transition:width .4s ease}
+.pills{display:flex;justify-content:center;gap:10px;margin-top:12px}
+.pill{font-size:12.5px;font-weight:700;padding:6px 13px;border-radius:999px;font-variant-numeric:tabular-nums}
+.pill.live{background:var(--live-soft);border:1px solid rgba(229,72,77,.4);color:#ff8589}
+.pill.blank{background:var(--blank-soft);border:1px solid rgba(147,161,179,.35);color:#b7c2d0}
+.chamber{display:flex;justify-content:center;align-items:flex-end;gap:6px;margin-top:14px;min-height:36px}
+.chamber .none{color:var(--faint);font-size:12px;letter-spacing:2px}
+
+.shell{position:relative;display:inline-block;border-radius:6px 6px 4px 4px;background:linear-gradient(180deg,var(--sc1,#3a4450),var(--sc2,#242c36));box-shadow:inset 0 -8px 12px rgba(0,0,0,.28),0 2px 5px rgba(0,0,0,.45)}
+.shell::after{content:"";position:absolute;left:-2px;right:-2px;bottom:-2px;height:11px;border-radius:3px;background:linear-gradient(180deg,#ecc76f,#a87d2e);box-shadow:0 1px 3px rgba(0,0,0,.5)}
+.shell.mini{width:19px;height:32px;color:#9aa4b1;font-size:10.5px;font-weight:800;display:inline-flex;align-items:center;justify-content:center}
+
+.turnline{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:14px;padding:11px;border-radius:12px;border:1px dashed var(--line);background:var(--panel2);font-size:13.5px;color:var(--dim)}
+.turnline b{color:var(--gold);font-size:14.5px}
+.turnline .swap{color:var(--faint);font-size:12px}
+
+.fire{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.fire-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:120px;border-radius:20px;border:1px solid;font-size:16.5px;font-weight:800;letter-spacing:1.5px;transition:transform .08s,filter .15s}
+.fire-btn:active{transform:scale(.955)}
+.fire-btn:disabled{opacity:.32;pointer-events:none}
+.fire-btn .fico{font-size:36px;line-height:1.15}
+.fire-btn small{font-size:10.5px;font-weight:500;letter-spacing:0}
+.fire-btn.self{background:linear-gradient(180deg,#1c2836,#141b25);border-color:#31465e}
+.fire-btn.self:active{background:#223146}
+.fire-btn.foe{background:linear-gradient(180deg,#2d1a1e,#1e1316);border-color:#5c2f34}
+.fire-btn.foe:active{background:#3a2024}
+
+.shots{list-style:none;display:flex;flex-direction:column;gap:8px}
+.shot{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:var(--panel2);border:1px solid var(--line);font-size:14px}
+.shot .no{color:var(--faint);font-size:12px;font-variant-numeric:tabular-nums;min-width:26px}
+.shot .who{flex:1}
+.shot .tag{font-weight:700;font-size:12.5px;padding:4px 11px;border-radius:999px;white-space:nowrap}
+.shot.live{border-color:rgba(229,72,77,.42)}
+.shot.live .tag{background:var(--live-soft);color:#ff8589}
+.shot.blank .tag{background:var(--blank-soft);color:#b7c2d0}
+.shot.last{box-shadow:0 0 0 1.5px rgba(233,180,85,.4)}
+.empty{color:var(--faint);font-size:13px;text-align:center;padding:14px 0 4px}
+
+.ghost{display:inline-flex;align-items:center;gap:6px;margin-top:12px;padding:10px 16px;border-radius:11px;border:1px solid var(--line);background:var(--panel2);color:var(--dim);font-size:13px;font-weight:600}
+.ghost:active{background:#232b35}
+
+.cta{display:block;width:100%;padding:16px;border-radius:14px;background:linear-gradient(180deg,#e9b455,#c98f2c);color:#201607;font-size:16px;font-weight:800;letter-spacing:1.5px;box-shadow:0 8px 24px rgba(201,143,44,.25)}
+.cta:active{filter:brightness(.9)}
+.cta.danger{background:linear-gradient(180deg,#ff6b6e,#d4393e);color:#fff}
+#ctaPulse{animation:pulse 1.7s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(233,180,85,.4)}55%{box-shadow:0 0 0 12px rgba(233,180,85,0)}}
+
+.rules{margin-top:4px;border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:2px 16px}
+.rules summary{cursor:pointer;padding:13px 0;font-size:13px;font-weight:700;color:var(--dim);letter-spacing:1px;list-style:none}
+.rules summary::before{content:"▸ ";color:var(--gold)}
+.rules[open] summary::before{content:"▾ "}
+.rules ul{padding:2px 0 14px 2px;list-style:none}
+.rules li{font-size:13px;color:var(--dim);line-height:1.75;padding-left:14px;position:relative}
+.rules li::before{content:"·";position:absolute;left:2px;color:var(--gold);font-weight:900}
+.rules b{color:var(--text)}
+.footer{text-align:center;margin-top:18px;display:flex;flex-direction:column;gap:4px;align-items:center}
+.link{font-size:12.5px;color:var(--faint);text-decoration:underline dotted;padding:8px}
+.link.danger{color:#c96a6d}
+
+#overlay{position:fixed;inset:0;z-index:100;background:rgba(5,7,10,.84);-webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);display:flex;align-items:center;justify-content:center;padding:24px}
+.ov-box{width:100%;max-width:342px;background:linear-gradient(180deg,#171c24,#10141a);border:1px solid var(--line);border-radius:22px;padding:26px 22px;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.65);animation:ovin .32s cubic-bezier(.2,1.4,.4,1)}
+@keyframes ovin{from{transform:scale(.85);opacity:0}}
+.ov-title{font-size:13px;letter-spacing:3px;color:var(--gold);font-weight:800}
+.ov-sub{margin:8px 0 16px;color:var(--dim);font-size:14px}
+.ov-sub b{color:var(--text)}
+
+.r-title{font-size:26px;font-weight:900;letter-spacing:3px;margin:6px 0 4px}
+.r-sub{color:var(--dim);font-size:13px}
+.m-body{color:var(--dim);font-size:14px;line-height:1.7;margin:10px 0 18px}
+.m-body b{color:var(--text)}
+.m-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.m-btns .ghost{margin-top:0;justify-content:center}
+.ov-btns{margin-top:18px;display:flex;flex-direction:column;gap:10px}
+.pickblank{display:block;width:100%;padding:14px;border-radius:14px;border:1px solid rgba(147,161,179,.45);background:var(--blank-soft);color:#c3cedb;font-size:16px;font-weight:800;letter-spacing:2px}
+.pickblank:active{filter:brightness(1.25)}
+
+/* 步进器 */
+.steprow{display:flex;align-items:center;justify-content:space-between;padding:10px 6px;border-bottom:1px solid var(--line)}
+.steprow:last-of-type{border-bottom:none}
+.steplabel{font-size:14.5px;font-weight:700;text-align:left}
+.steplabel small{display:block;font-size:10.5px;color:var(--faint);font-weight:500;margin-top:2px}
+.stepctl{display:flex;align-items:center;gap:12px}
+.stepbtn{width:44px;height:44px;border-radius:50%;border:1px solid var(--line2,#333b47);background:var(--panel2);color:var(--text);font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.stepbtn:active{background:#232b35}
+.stepbtn:disabled{opacity:.25;pointer-events:none}
+.stepval{font-size:26px;font-weight:900;min-width:52px;text-align:center;font-variant-numeric:tabular-nums;color:var(--gold)}
+.steptotal{margin:14px 0 18px;font-size:13px;color:var(--dim);background:var(--panel2);border:1px dashed var(--line);border-radius:10px;padding:10px}
+.steptotal b{color:var(--text)}
+
+@media (min-width:560px){.fire-btn{min-height:132px}}
+</style>
+</head>
+<body>
+<div id="fx"></div>
+<div id="wrap">
+  <header>
+    <div class="logo">📊</div>
+    <div class="titles">
+      <h1>恶魔轮盘 · 记录版</h1>
+      <p>TRACKER MODE · MANUAL INPUT</p>
+    </div>
+    <button id="soundBtn" data-action="sound" aria-label="声音开关">🔊</button>
+  </header>
+  <nav id="roundBar" aria-label="回合切换"></nav>
+  <main id="main"></main>
+</div>
+<div id="overlay" class="hidden"></div>
+
+<script>
+'use strict';
+var KEY='buckshot-tracker-v1';
+function $(s){return document.querySelector(s)}
+function other(p){return p==='player'?'opponent':'player'}
+var NAME={player:'玩家',opponent:'对方'};
+var TARGET={self:'自己',other:'对方'};
+
+var state=null,pendingOk=null,penShot=null,penL=2,penB=2,AC=null;
+
+/* ---------------- 状态 ---------------- */
+function loadState(){
+  try{var s=JSON.parse(localStorage.getItem(KEY));if(s&&Array.isArray(s.rounds))return s}catch(e){}
+  return null;
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+function curRound(){return state.rounds[state.rounds.length-1]}
+function isViewingCurrent(){return state.view===state.rounds.length-1}
+function turnOf(r){
+  if(r.turnOverride)return r.turnOverride;
+  var t='player',i;
+  for(i=0;i<r.fired.length;i++){var s=r.fired[i];if(!(s.result==='blank'&&s.target==='self'))t=other(t)}
+  return t;
+}
+function statOf(r){
+  var rem=r.N-r.fired.length,liveRem=r.L,i;
+  for(i=0;i<r.fired.length;i++)if(r.fired[i].result==='live')liveRem--;
+  return {rem:rem,liveRem:liveRem,blankRem:rem-liveRem};
+}
+
+/* ---------------- 动作 ---------------- */
+function recordShot(target,result){
+  var r=curRound();
+  r.fired.push({shooter:penShot.shooter,target:target,result:result});
+  penShot=null;
+  save();render();closeOv();
+  sfx(result==='live'?'live':'blank');
+  try{navigator.vibrate&&navigator.vibrate(result==='live'?[70,40,110]:25)}catch(e){}
+  if(result==='live'){
+    document.body.classList.remove('flash','shake');
+    void document.body.offsetWidth;
+    document.body.classList.add('flash','shake');
+    setTimeout(function(){document.body.classList.remove('flash','shake')},650);
+  }
+}
+function askFire(target){
+  if(!isViewingCurrent())return;
+  var r=curRound(),st=statOf(r);
+  if(st.rem<=0)return;
+  penShot={shooter:turnOf(r),target:target};
+  openOv('<div class="ov-box modal">'
+    +'<div class="m-icon">🔎</div>'
+    +'<div class="r-title">这发是…？</div>'
+    +'<div class="r-sub">第 '+(r.fired.length+1)+' 枪 · '+NAME[penShot.shooter]+' → '+TARGET[target]+'</div>'
+    +'<div class="m-body">按实际对局结果记录（游戏/实体道具判定）</div>'
+    +'<div class="ov-btns">'
+    +'<button class="cta danger" data-action="pick" data-res="live">💥 实弹</button>'
+    +'<button class="pickblank" data-action="pick" data-res="blank">💨 空包弹</button>'
+    +'<button class="ghost" style="justify-content:center" data-action="ov-cancel">取消</button>'
+    +'</div></div>');
+}
+function undo(){
+  if(!state.rounds.length||!isViewingCurrent())return;
+  var r=curRound();
+  if(!r.fired.length)return;
+  r.fired.pop();save();render();sfx('ui');
+}
+function toggleTurn(){
+  if(!isViewingCurrent())return;
+  var r=curRound();
+  r.turnOverride=other(turnOf(r));
+  save();render();sfx('ui');
+}
+
+/* 新回合：手动录入实弹 / 空包数量 */
+function openStepper(){
+  penL=2;penB=2;
+  openOv('<div class="ov-box modal" id="stepBox">'+stepperHtml()+'</div>');
+}
+function stepperHtml(){
+  var total=penL+penB;
+  var p=total>0?penL/total:null;
+  var probTxt=total>0?('下一发实弹概率 <b>'+(Math.round(p*1000)/10)+'%</b>'):'至少录入 1 发';
+  return '<div class="m-icon">🧮</div>'
+    +'<div class="r-title" style="font-size:22px">记录新一回合</div>'
+    +'<div class="m-body" style="margin-bottom:4px">按游戏/实体弹壳的实际装填录入：</div>'
+    +'<div class="steprow"><span class="steplabel">💥 实弹<small>0 ～ 8 发</small></span>'
+    +'<div class="stepctl">'
+    +'<button class="stepbtn" data-action="step" data-k="L" data-d="-1"'+(penL<=0?' disabled':'')+'>−</button>'
+    +'<span class="stepval">'+penL+'</span>'
+    +'<button class="stepbtn" data-action="step" data-k="L" data-d="1"'+(penL>=8||total>=8?' disabled':'')+'>＋</button>'
+    +'</div></div>'
+    +'<div class="steprow"><span class="steplabel">💨 空包弹<small>0 ～ 8 发</small></span>'
+    +'<div class="stepctl">'
+    +'<button class="stepbtn" data-action="step" data-k="B" data-d="-1"'+(penB<=0?' disabled':'')+'>−</button>'
+    +'<span class="stepval">'+penB+'</span>'
+    +'<button class="stepbtn" data-action="step" data-k="B" data-d="1"'+(penB>=8||total>=8?' disabled':'')+'>＋</button>'
+    +'</div></div>'
+    +'<div class="steptotal">共 <b>'+total+'</b> 发 · '+probTxt+'</div>'
+    +'<div class="m-btns"><button class="ghost" data-action="ov-cancel">取消</button>'
+    +'<button class="cta" data-action="step-ok"'+(total<=0?' disabled style="opacity:.4;pointer-events:none"':'')+'>开始记录</button></div>';
+}
+function stepChange(k,d){
+  if(k==='L')penL=Math.min(8,Math.max(0,penL+d));
+  else penB=Math.min(8,Math.max(0,penB+d));
+  if(penL+penB>8){ /* 总数上限 8，回退一步 */
+    if(k==='L')penL-=d;else penB-=d;
+    return;
+  }
+  var box=$('#stepBox');
+  if(box)box.innerHTML=stepperHtml();
+}
+function pushRound(){
+  state.rounds.push({N:penL+penB,L:penL,fired:[],turnOverride:null});
+  penL=2;penB=2;
+  state.view=state.rounds.length-1;
+  save();render();closeOv();sfx('ui');
+}
+function nextAction(){
+  if(!state.rounds.length){openStepper();return}
+  if(!isViewingCurrent())return;
+  var r=curRound(),st=statOf(r);
+  if(st.rem>0){
+    confirmModal({icon:'⏭️',title:'提前结束本回合？',
+      body:'弹仓内还有 <b>'+st.rem+'</b> 发未记录（实弹 '+st.liveRem+' / 空包 '+st.blankRem+'），将作废并新建一回合。',
+      ok:'新建一回合',danger:true,onOk:openStepper});
+  }else openStepper();
+}
+function wipe(){
+  confirmModal({icon:'🗑️',title:'清空全部记录？',body:'将删除所有回合与开枪记录，不可恢复。',
+    ok:'全部清空',danger:true,onOk:function(){
+      try{localStorage.removeItem(KEY)}catch(e){}
+      var m=state.muted;
+      state={rounds:[],view:-1,muted:m};
+      save();render();
+    }});
+}
+
+/* ---------------- 渲染 ---------------- */
+function fmtPct(p){
+  var v=Math.round(p*1000)/10;
+  return (v%1===0)?String(Math.round(v)):v.toFixed(1);
+}
+function shellStrip(n){
+  if(!n)return '<span class="none">— 空 —</span>';
+  var s='',i;
+  for(i=0;i<n;i++)s+='<span class="shell mini">?</span>';
+  return s;
+}
+function shotRow(s,i,total){
+  var last=(i===total-1)?' last':'';
+  return '<li class="shot '+s.result+last+'">'
+    +'<span class="no">#'+(i+1)+'</span>'
+    +'<span class="who">'+NAME[s.shooter]+' → '+TARGET[s.target]+'</span>'
+    +'<span class="tag">'+(s.result==='live'?'💥 实弹':'💨 空包')+'</span></li>';
+}
+
+function render(){renderBar();renderMain();renderSound()}
+
+function renderBar(){
+  var nav=$('#roundBar');
+  if(!state.rounds.length){nav.innerHTML='';return}
+  var html='',i;
+  for(i=0;i<state.rounds.length;i++){
+    var done=statOf(state.rounds[i]).rem===0;
+    var active=(state.view===i)?' active':'';
+    var dot=(i===state.rounds.length-1)?' live-dot':'';
+    html+='<button class="chip'+active+'" data-action="view" data-i="'+i+'">'
+      +'<span class="dot'+dot+'"></span>第 '+(i+1)+' 回合'+(done?'<span class="done">✓</span>':'')+'</button>';
+  }
+  nav.innerHTML=html;
+  var el=nav.children[state.view];
+  if(el&&el.scrollIntoView)el.scrollIntoView({inline:'center',block:'nearest'});
+}
+
+function renderMain(){
+  var m=$('#main');
+  if(!state.rounds.length){
+    m.innerHTML='<section class="card"><div class="empty" style="padding:26px 0">还没有回合 — 点击下方按钮录入第一回合的弹数</div></section>'
+      +'<button class="cta" data-action="next" id="ctaPulse">➕ 记录新一回合</button>'
+      +rulesHtml()+footerHtml();
+    return;
+  }
+  var idx=state.view,r=state.rounds[idx],st=statOf(r);
+  var liveView=isViewingCurrent(),turn=turnOf(r);
+  var p=st.rem>0?st.liveRem/st.rem:null;
+  var numCls=['hot','cold','sure'].filter(function(c){
+    return (c==='hot'&&p>=0.5)||(c==='cold'&&st.liveRem===0&&st.rem>0)||(c==='sure'&&st.blankRem===0&&st.rem>0);
+  }).join(' ');
+
+  var probBlock;
+  if(st.rem===0){
+    probBlock='<div class="prob-empty">弹仓已空</div><div class="bar"><div class="fill" style="width:0%"></div></div>';
+  }else{
+    probBlock='<div class="prob-num '+numCls+'">'+fmtPct(p)+'<span class="pct">%</span></div>'
+      +'<div class="frac">'+st.liveRem+' / '+st.rem+'</div>'
+      +'<div class="bar"><div class="fill" style="width:'+(Math.round(p*1000)/10)+'%"></div></div>';
+  }
+
+  var html='';
+  if(!liveView){
+    html+='<div class="viewnote">👁 正在查看历史回合（只读）· 点击上方标签可返回当前回合</div>';
+  }
+  html+='<section class="card hero">'
+    +'<div class="row1"><span class="badge">第 '+(idx+1)+' 回合</span>'
+    +'<span class="sub">录入装填 · <em style="color:#ff8589">实弹 '+r.L+'</em> / <em style="color:#b7c2d0">空包 '+(r.N-r.L)+'</em></span>'
+    +'<span class="pill-remain'+(liveView?'':' grey')+'">剩余 '+st.rem+'/'+r.N+'</span></div>'
+    +'<div class="prob"><div class="prob-label">下一发 · 实弹概率</div>'+probBlock
+    +'<div class="pills"><span class="pill live">实弹剩 '+st.liveRem+'</span><span class="pill blank">空包剩 '+st.blankRem+'</span></div>'
+    +'<div class="chamber">'+shellStrip(st.rem)+'</div></div>'
+    +(liveView?'<button class="turnline" data-action="turn">🎧 当前持枪：<b>'+NAME[turn]+'</b><span class="swap">⇄ 点击手动切换</span></button>':'')
+    +'</section>';
+
+  if(liveView){
+    var dis=(st.rem===0)?' disabled':'';
+    html+='<section class="fire">'
+      +'<button class="fire-btn self" data-action="fire" data-t="self"'+dis+'><span class="fico">🙂</span><span>朝自己开枪</span><small>点击后记录结果</small></button>'
+      +'<button class="fire-btn foe" data-action="fire" data-t="other"'+dis+'><span class="fico">😈</span><span>朝对方开枪</span><small>点击后记录结果</small></button>'
+      +'</section>'
+      +'<section class="card seq"><div class="card-head"><h2>开枪记录（含对方行为）</h2><span class="sub">共 '+r.fired.length+' 枪</span></div>'
+      +(r.fired.length
+        ?'<ul class="shots">'+r.fired.map(function(s,i){return shotRow(s,i,r.fired.length)}).join('')+'</ul>'
+          +'<button class="ghost" data-action="undo">↩ 撤销上一枪</button>'
+        :'<div class="empty">尚未记录 — 谁开枪就点哪个按钮</div>')
+      +'</section>'
+      +'<button class="cta" data-action="next"'+(st.rem===0?' id="ctaPulse"':'')+'>'
+      +(st.rem===0?'➕ 弹仓已空 · 记录新一回合':'⏭ 结束本回合 · 记录新一回合')+'</button>';
+  }else{
+    html+='<section class="card seq"><div class="card-head"><h2>本回合开枪记录</h2><span class="sub">共 '+r.fired.length+' 枪</span></div>'
+      +(r.fired.length
+        ?'<ul class="shots">'+r.fired.map(function(s,i){return shotRow(s,i,r.fired.length)}).join('')+'</ul>'
+        :'<div class="empty">该回合未开枪</div>')
+      +(st.rem>0?'<div class="empty">另有 '+st.rem+' 发未记录（实弹 '+st.liveRem+' / 空包 '+st.blankRem+'）</div>':'')
+      +'</section>';
+  }
+
+  html+=rulesHtml()+footerHtml();
+  m.innerHTML=html;
+}
+function rulesHtml(){
+  return '<details class="rules"><summary>📖 使用说明</summary><ul>'
+    +'<li>适合配合<b>桌面版 / 实体道具</b>对局：弹序由真实对局决定，本工具只做<b>计数与概率</b>。</li>'
+    +'<li>开局：游戏装弹后，把「实弹 / 空包」数量用步进器<b>录入</b>（各 0～8，总共 ≤ 8）。</li>'
+    +'<li>每次有人开枪（<b>包括对方的行为</b>）：点「朝自己 / 朝对方」，再按实际结果记「实弹 / 空包」。</li>'
+    +'<li>剩余弹数、命中概率、开枪序列全自动维护；空包打自己 → 持枪方继续，其余换人（可手动切换）。</li>'
+    +'<li>误触可「撤销上一枪」；顶部标签可切换查看历史回合；数据自动保存在本机浏览器。</li>'
+    +'</ul></details>';
+}
+function footerHtml(){
+  return '<div class="footer">'
+    +'<a class="link" href="versus.html">🎲 切换到对战版（随机发弹 · 血条 · 道具）</a>'
+    +'<a class="link" href="versus-ai.html">🤖 切换到 AI 版（单人战役）</a>'
+    +'<button class="link danger" data-action="wipe">清空全部记录</button>'
+    +'</div>';
+}
+function renderSound(){var b=$('#soundBtn');if(b)b.textContent=state.muted?'🔇':'🔊'}
+
+/* ---------------- 覆盖层 ---------------- */
+function openOv(html){var o=$('#overlay');o.innerHTML=html;o.classList.remove('hidden')}
+function closeOv(){pendingOk=null;penShot=null;$('#overlay').classList.add('hidden');$('#overlay').innerHTML=''}
+
+function confirmModal(opt){
+  pendingOk=opt.onOk||null;
+  openOv('<div class="ov-box modal">'
+    +'<div class="m-icon">'+(opt.icon||'❓')+'</div>'
+    +'<div class="r-title" style="font-size:22px;letter-spacing:2px">'+opt.title+'</div>'
+    +'<div class="m-body">'+opt.body+'</div>'
+    +'<div class="m-btns"><button class="ghost" data-action="ov-cancel">取消</button>'
+    +'<button class="cta'+(opt.danger?' danger':'')+'" data-action="ov-ok">'+(opt.ok||'确认')+'</button></div>'
+    +'</div>');
+}
+
+/* ---------------- 音效 ---------------- */
+function sfx(kind){
+  if(state.muted)return;
+  try{
+    AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+    if(AC.state==='suspended')AC.resume();
+    var t=AC.currentTime;
+    if(kind==='live'){
+      var o=AC.createOscillator(),g=AC.createGain();
+      o.type='sine';o.frequency.setValueAtTime(160,t);o.frequency.exponentialRampToValueAtTime(38,t+.4);
+      g.gain.setValueAtTime(.5,t);g.gain.exponentialRampToValueAtTime(.001,t+.45);
+      o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+.5);
+      var len=Math.floor(AC.sampleRate*.12),nb=AC.createBuffer(1,len,AC.sampleRate),d=nb.getChannelData(0),i;
+      for(i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2);
+      var ns=AC.createBufferSource();ns.buffer=nb;
+      var ng=AC.createGain();ng.gain.value=.35;
+      ns.connect(ng);ng.connect(AC.destination);ns.start(t);
+    }else if(kind==='blank'){
+      var len2=Math.floor(AC.sampleRate*.09),nb2=AC.createBuffer(1,len2,AC.sampleRate),d2=nb2.getChannelData(0),j;
+      for(j=0;j<len2;j++)d2[j]=(Math.random()*2-1)*Math.pow(1-j/len2,3);
+      var ns2=AC.createBufferSource();ns2.buffer=nb2;
+      var hp=AC.createBiquadFilter();hp.type='highpass';hp.frequency.value=900;
+      var ng2=AC.createGain();ng2.gain.value=.18;
+      ns2.connect(hp);hp.connect(ng2);ng2.connect(AC.destination);ns2.start(t);
+    }else{
+      var o2=AC.createOscillator(),g2=AC.createGain();
+      o2.type='square';o2.frequency.value=660;
+      g2.gain.setValueAtTime(.05,t);g2.gain.exponentialRampToValueAtTime(.001,t+.06);
+      o2.connect(g2);g2.connect(AC.destination);o2.start(t);o2.stop(t+.07);
+    }
+  }catch(e){}
+}
+
+/* ---------------- 事件委托 ---------------- */
+document.addEventListener('click',function(e){
+  var el=e.target.closest('[data-action]');
+  if(!el)return;
+  var a=el.getAttribute('data-action');
+  if(a==='fire')askFire(el.getAttribute('data-t'));
+  else if(a==='pick')recordShot(penShot.target,el.getAttribute('data-res'));
+  else if(a==='undo')undo();
+  else if(a==='turn')toggleTurn();
+  else if(a==='next')nextAction();
+  else if(a==='step')stepChange(el.getAttribute('data-k'),parseInt(el.getAttribute('data-d'),10));
+  else if(a==='step-ok')pushRound();
+  else if(a==='view'){state.view=parseInt(el.getAttribute('data-i'),10);save();render()}
+  else if(a==='wipe')wipe();
+  else if(a==='sound'){state.muted=!state.muted;save();renderSound()}
+  else if(a==='ov-ok'){var f=pendingOk;pendingOk=null;closeOv();if(f)f()}
+  else if(a==='ov-cancel'){pendingOk=null;closeOv()}
+});
+
+/* ---------------- 启动 ---------------- */
+state=loadState();
+if(!state){state={rounds:[],view:-1,muted:false};save();render()}
+else render();
+</script>
+</body>
+</html>
