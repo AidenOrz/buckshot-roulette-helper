@@ -22,7 +22,7 @@ body{
     radial-gradient(1100px 520px at 50% -8%,#181f29 0%,rgba(24,31,41,0) 60%),
     radial-gradient(700px 380px at 50% 108%,rgba(229,72,77,.07),rgba(0,0,0,0) 70%),
     var(--bg);
-  padding:calc(env(safe-area-inset-top) + 14px) 14px calc(env(safe-area-inset-bottom) + 28px);
+  padding:calc(env(safe-area-inset-top) + 14px) 14px calc(env(safe-area-inset-bottom) + 124px);
 }
 #fx{position:fixed;inset:0;pointer-events:none;z-index:200;opacity:0;background:radial-gradient(circle at 50% 45%,rgba(229,72,77,0) 30%,rgba(229,72,77,.32) 100%)}
 body.flash #fx{animation:flash .55s ease-out}
@@ -76,6 +76,10 @@ em{font-style:normal}
 .hprow.dead .hplabel{color:#c96a6d}
 .cufftag{font-size:10.5px;color:#ffd27a;background:rgba(233,180,85,.12);border:1px solid rgba(233,180,85,.35);border-radius:6px;padding:2px 6px;font-weight:700}
 .newsbox{margin-top:10px;border:1px solid var(--line);background:var(--panel2);border-radius:10px;padding:8px 10px;text-align:left}
+.newsbox summary{cursor:pointer;list-style:none;font-size:10px;letter-spacing:2px;color:var(--faint)}
+.newsbox summary::-webkit-details-marker{display:none}
+.newsbox summary::before{content:"▸ ";color:var(--gold)}
+.newsbox[open] summary::before{content:"▾ "}
 .news-t{font-size:10px;letter-spacing:2px;color:var(--faint);margin-bottom:4px}
 .news-i{font-size:11.5px;color:var(--dim);line-height:1.8}
 .news-i .m{color:var(--gold);font-size:9px;border:1px solid var(--line);border-radius:4px;padding:0 3px;margin-right:5px}
@@ -88,17 +92,17 @@ em{font-style:normal}
 button.item-slot:active{background:#2a313b;border-color:var(--line2)}
 .item-slot.empty{border-style:dashed;opacity:.4;color:var(--faint)}
 
-.prob{text-align:center;padding:4px 0 2px}
-.prob-label{font-size:11px;letter-spacing:3px;color:var(--faint);margin-bottom:2px}
-.prob-num{font-size:clamp(50px,15vw,76px);font-weight:900;line-height:1.05;font-variant-numeric:tabular-nums;color:var(--text)}
-.prob-num.hot{background:linear-gradient(180deg,#ff7a7d,#e5484d);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 16px rgba(229,72,77,.35))}
-.prob-num.cold{color:var(--faint)}
-.prob-num .pct{font-size:.42em;font-weight:700;color:var(--dim);margin-left:2px}
-.prob-empty{font-size:22px;font-weight:800;color:var(--faint);letter-spacing:4px;padding:14px 0 8px}
-.frac{font-size:13px;color:var(--faint);font-variant-numeric:tabular-nums;margin:-2px 0 10px}
-.bar{height:10px;border-radius:999px;background:#232a33;overflow:hidden;border:1px solid #2c3540}
-.bar .fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#ff7a7d,#e5484d);transition:width .4s ease}
-.pills{display:flex;justify-content:center;gap:10px;margin-top:12px}
+.prob{padding:2px 0 0;text-align:center}
+.probslim{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+.ps{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--dim);padding:7px 11px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);font-variant-numeric:tabular-nums}
+.ps b{font-size:15.5px;font-weight:900;color:var(--text)}
+.ps.live{border-color:rgba(229,72,77,.38);background:var(--live-soft)}
+.ps.live b{color:#ff8589}
+.ps.blank{border-color:rgba(147,161,179,.32);background:var(--blank-soft)}
+.ps.blank b{color:#b7c2d0}
+.ps.pct b{color:var(--gold)}
+.ps.pct.hot b,.ps.pct.sure b{color:#ff8589}
+.ps.pct.cold b{color:#9aa4b1}
 .pill{font-size:12.5px;font-weight:700;padding:6px 13px;border-radius:999px;font-variant-numeric:tabular-nums}
 .pill.live{background:var(--live-soft);border:1px solid rgba(229,72,77,.4);color:#ff8589}
 .pill.blank{background:var(--blank-soft);border:1px solid rgba(147,161,179,.35);color:#b7c2d0}
@@ -121,16 +125,19 @@ button.item-slot:active{background:#2a313b;border-color:var(--line2)}
 .turnline b{color:var(--gold);font-size:14.5px}
 .turnline.thinking{border-color:rgba(233,180,85,.4);color:var(--gold);animation:blink 1.6s infinite}
 
-.fire{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
-.fire-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:120px;border-radius:20px;border:1px solid;font-size:16.5px;font-weight:800;letter-spacing:1.5px;transition:transform .08s,filter .15s}
-.fire-btn:active{transform:scale(.955)}
+#dock{position:fixed;left:0;right:0;bottom:0;z-index:90;pointer-events:none;padding:20px 14px calc(env(safe-area-inset-bottom) + 12px);background:linear-gradient(180deg,rgba(10,12,15,0),rgba(10,12,15,.88) 36%,rgba(10,12,15,.98) 62%)}
+#dock.dockhide{display:none}
+.dock-in{pointer-events:auto;max-width:560px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.dock-in.single{grid-template-columns:1fr}
+.fire-btn{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:9px;min-height:58px;border-radius:15px;border:1px solid;font-size:15.5px;font-weight:800;letter-spacing:1px;transition:transform .08s,filter .15s}
+.fire-btn:active{transform:scale(.96)}
 .fire-btn:disabled{opacity:.32;pointer-events:none}
-.fire-btn .fico{font-size:36px;line-height:1.15}
-.fire-btn small{font-size:10.5px;font-weight:500;letter-spacing:0}
+.fire-btn .fico{font-size:23px;line-height:1}
 .fire-btn.self{background:linear-gradient(180deg,#1c2836,#141b25);border-color:#31465e}
 .fire-btn.self:active{background:#223146}
 .fire-btn.foe{background:linear-gradient(180deg,#2d1a1e,#1e1316);border-color:#5c2f34}
 .fire-btn.foe:active{background:#3a2024}
+#dock .cta{padding:15px}
 
 .shots{list-style:none;display:flex;flex-direction:column;gap:8px}
 .shot{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:var(--panel2);border:1px solid var(--line);font-size:14px}
@@ -231,7 +238,7 @@ button.item-slot:active{background:#2a313b;border-color:var(--line2)}
 .pick-item .icn{width:26px;height:26px;color:var(--gold)}
 .pick-item:active{background:#2a313b;border-color:var(--line2)}
 
-@media (min-width:560px){.fire-btn{min-height:132px}}
+@media (min-width:560px){.dock-in{gap:12px}}
 </style>
 </head>
 <body>
@@ -252,6 +259,7 @@ button.item-slot:active{background:#2a313b;border-color:var(--line2)}
   <nav id="roundBar" aria-label="战役进度"></nav>
   <main id="main"></main>
 </div>
+<div id="dock" class="dockhide"></div>
 <div id="overlay" class="hidden"></div>
 
 <script>
@@ -884,9 +892,9 @@ function intelHtml(r){
   var news='';
   if(r.news&&r.news.length){
     var nl=r.news.slice(-5),ni;
-    news='<div class="newsbox"><div class="news-t">📡 情报来源（最近 5 条）</div>';
+    news='<details class="newsbox"><summary>📡 情报来源（'+r.news.length+' 条）</summary>';
     for(ni=0;ni<nl.length;ni++)news+='<div class="news-i"><span class="m">M'+nl[ni].m+'</span>'+nl[ni].txt+'</div>';
-    news+='</div>';
+    news+='</details>';
   }
   if(!chips.length&&!news)return '';
   return news+'<div class="infobar">'+chips.join('')+'</div>';
@@ -906,7 +914,7 @@ function shotRow(s,i,total){
 }
 function shotsHtml(r,interactive){
   var all=r.pastShots.concat(r.fired);
-  if(!all.length)return '<div class="empty">尚未开枪 — 选择上方按钮开始</div>';
+  if(!all.length)return '<div class="empty">尚未开枪 — 点击下方按钮开始</div>';
   var html='<ul class="shots">'+all.map(function(s,i){return shotRow(s,i,all.length)}).join('')+'</ul>';
   if(interactive&&r.fired.length)html+='<button class="ghost" data-action="undo">↩ 撤销我的上一枪</button>';
   return html;
@@ -934,7 +942,7 @@ function renderBar(){
 
 function renderMain(){
   var m=$('#main');
-  if(!state.rounds.length){m.innerHTML='';return}
+  if(!state.rounds.length){m.innerHTML='';$('#dock').classList.add('dockhide');return}
   var idx=state.view,r=state.rounds[idx],st=statOf(r);
   var liveView=isViewingCurrent(),turn=r.turn;
   var p=st.rem>0?st.liveRem/st.rem:null;
@@ -943,13 +951,16 @@ function renderMain(){
     return (c==='hot'&&p>=0.5)||(c==='cold'&&st.liveRem===0&&st.rem>0)||(c==='sure'&&st.blankRem===0&&st.rem>0);
   }).join(' ');
 
+  var dis=(st.rem===0||turn!=='player')?' disabled':'';
   var probBlock;
   if(st.rem===0){
-    probBlock='<div class="prob-empty">弹仓已空</div><div class="bar"><div class="fill" style="width:0%"></div></div>';
+    probBlock='<div class="probslim"><span class="ps">弹仓已空</span></div>';
   }else{
-    probBlock='<div class="prob-num '+numCls+'">'+fmtPct(p)+'<span class="pct">%</span></div>'
-      +'<div class="frac">'+st.liveRem+' / '+st.rem+'</div>'
-      +'<div class="bar"><div class="fill" style="width:'+(Math.round(p*1000)/10)+'%"></div></div>';
+    probBlock='<div class="probslim">'
+      +'<span class="ps live">实弹 <b>'+st.liveRem+'</b></span>'
+      +'<span class="ps blank">空包 <b>'+st.blankRem+'</b></span>'
+      +'<span class="ps pct '+numCls+'">实弹率 <b>'+fmtPct(p)+'%</b></span>'
+      +'</div>';
   }
 
   var html='';
@@ -967,8 +978,7 @@ function renderMain(){
     +'<div class="hprow'+(r.hpO<=0?' dead':'')+'" style="margin-top:6px"><span class="hplabel">'+NAME.opponent+'</span><span class="hearts">'+hearts(r.hpO,r.hpMax)+'</span>'+(r.cuffed==='opponent'?'<span class="cufftag">'+ic('cuff')+' 被铐</span>':'')+(r.dbl.opponent>0?'<span class="cufftag">'+ic('dtrg')+' 下枪×2</span>':'')+'</div>'
     +itembarHtml(r,'opponent')
     +'</div>'
-    +'<div class="prob"><div class="prob-label">下一发 · 实弹概率</div>'+probBlock
-    +'<div class="pills"><span class="pill live">实弹剩 '+st.liveRem+'</span><span class="pill blank">空包剩 '+st.blankRem+'</span></div>'
+    +'<div class="prob">'+probBlock
     +'<div class="chamber">'+shellStrip(st.rem)+'</div>'
     +intelHtml(r)
     +'</div>'
@@ -977,22 +987,10 @@ function renderMain(){
     +'</section>';
 
   if(liveView){
-    if(!dead){
-      var dis=(st.rem===0||turn!=='player')?' disabled':'';
-      html+='<section class="fire">'
-        +'<button class="fire-btn self" data-action="fire" data-t="self"'+dis+'><span class="fico">🙂</span><span>朝自己开枪</span><small>空包弹 → 可再开一枪</small></button>'
-        +'<button class="fire-btn foe" data-action="fire" data-t="other"'+dis+'><span class="fico">🤖</span><span>朝 AI 开枪</span><small>实弹 → AI −1♥</small></button>'
-        +'</section>';
-    }
     html+='<section class="card seq"><div class="card-head"><h2>已开枪序列</h2><span class="sub">共 '+(r.pastShots.length+r.fired.length)+' 枪</span></div>'
       +shotsHtml(r,liveView&&!dead)
-      +'</section>';
-    if(dead){
-      html+='<button class="cta" data-action="next" id="ctaPulse">🏁 查看战役结算</button>';
-    }else if(st.rem===0){
-      html+='<button class="cta" data-action="next" id="ctaPulse">🎁 弹仓已空 · 发放道具并重装</button>';
-    }
-    html+='<button class="mini" data-action="giveup">🔄 放弃本场，重开战役</button>';
+      +'</section>'
+      +'<button class="mini" data-action="giveup">🔄 放弃本场，重开战役</button>';
   }else{
     html+='<section class="card seq"><div class="card-head"><h2>本回合开枪序列</h2><span class="sub">共 '+(r.pastShots.length+r.fired.length)+' 枪</span></div>'
       +shotsHtml(r,false)
@@ -1018,6 +1016,14 @@ function renderMain(){
     +'</div>';
 
   m.innerHTML=html;
+  var dock=$('#dock');
+  if(!liveView)dock.classList.add('dockhide');
+  else if(dead){dock.classList.remove('dockhide');dock.innerHTML='<div class="dock-in single"><button class="cta" data-action="next" id="ctaPulse">🏁 查看战役结算</button></div>'}
+  else if(st.rem===0){dock.classList.remove('dockhide');dock.innerHTML='<div class="dock-in single"><button class="cta" data-action="next" id="ctaPulse">🎁 弹仓已空 · 补给并重装</button></div>'}
+  else{dock.classList.remove('dockhide');dock.innerHTML='<div class="dock-in">'
+    +'<button class="fire-btn self" data-action="fire" data-t="self"'+dis+'><span class="fico">🙂</span><span>朝自己开枪</span></button>'
+    +'<button class="fire-btn foe" data-action="fire" data-t="other"'+dis+'><span class="fico">🤖</span><span>朝 AI 开枪</span></button>'
+    +'</div>'}
 }
 function renderSound(){var b=$('#soundBtn');if(b)b.textContent=state.muted?'🔇':'🔊'}
 function toast(msg){
